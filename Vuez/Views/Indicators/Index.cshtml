@@ -1,0 +1,33 @@
+﻿@model IEnumerable<vuez.Indicators>
+
+<h2>Zoznam Meradiel</h2>
+
+<a asp-action="Create" class="btn btn-primary">Create New Indicator</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Meno pristroja/th>
+            <th>Typ</th>
+            <th>Vyrobca</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.Id</td>
+                <td>@item.Name</td>
+                <td>@item.Type</td>
+                <td>@item.Producer</td>
+
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning">Edit</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

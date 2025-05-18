@@ -1,12 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-public class Indicators
-{
-    public int Id { get; set; }
+namespace vuez {
 
-    [Required]
-    public string Name { get; set; }
+    public class Indicators
+    {
+        public int Id { get; set; }
 
-    [Range(0, double.MaxValue)]
-    public decimal Price { get; set; }
+        [Required]
+        public string Name { get; set; }
+
+        public string Type { get; set; }
+
+        public string Producer { get; set; }
+
+        public string List_Num { get; set; }
+    }
 }

@@ -10,15 +10,10 @@ namespace vuez
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Nastavenie presnosti pre Price
-            modelBuilder.Entity<Indicators>()
-                .Property(p => p.Price)
-                .HasColumnType("decimal(18,2)");
-
             // Seed data - pridanie základných údajov do databázy
             modelBuilder.Entity<Indicators>().HasData(
-                new Indicators { Id = 1, Name = "Indicator1", Price = 100.0m },
-                new Indicators { Id = 2, Name = "Indicator2", Price = 200.0m }
+                new Indicators { Id = 1, Name = "Indicator1", Type = "TypeA", Producer = "Producer1", List_Num = "LN001" },
+                new Indicators { Id = 2, Name = "Indicator2", Type = "TypeB", Producer = "Producer2", List_Num = "LN002" }
             );
         }
     }
