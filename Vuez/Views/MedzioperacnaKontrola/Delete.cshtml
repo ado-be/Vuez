@@ -1,0 +1,43 @@
+﻿@model vuez.Models.ConfigurationSheet
+
+<h1>Vymazanie konfiguračného listu</h1>
+
+<div class="alert alert-danger">
+    <h3>Ste si istý, že chcete vymazať tento konfiguračný list?</h3>
+    <p>Táto akcia sa nedá vrátiť. Budú vymazané aj všetky programové položky a ich detaily!</p>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4>Detaily konfiguračného listu</h4>
+    </div>
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">ID:</dt>
+            <dd class="col-sm-9">@Model.ConfigId</dd>
+
+            <dt class="col-sm-3">Názov APV:</dt>
+            <dd class="col-sm-9">@Model.Apvname</dd>
+
+            <dt class="col-sm-3">Číslo APV:</dt>
+            <dd class="col-sm-9">@Model.Apvnumber</dd>
+
+            <dt class="col-sm-3">Zákazkové číslo:</dt>
+            <dd class="col-sm-9">@Model.OrderNumber</dd>
+
+            <dt class="col-sm-3">Dátum vytvorenia:</dt>
+            <dd class="col-sm-9">@(Model.CreatedDate?.ToString("dd.MM.yyyy") ?? "-")</dd>
+
+            <dt class="col-sm-3">Počet programových položiek:</dt>
+            <dd class="col-sm-9">@(Model.ProgramItems?.Count() ?? 0)</dd>
+        </dl>
+    </div>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" name="configId" value="@Model.ConfigId" />
+    <div class="form-group">
+        <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
+        <button type="submit" class="btn btn-danger">Vymazať</button>
+    </div>
+</form>

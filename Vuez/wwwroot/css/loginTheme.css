@@ -1,0 +1,54 @@
+/* Login page styling */
+.bg-login-image {
+    background: url('../images/VUEZlogo.png');
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.login-wrapper {
+    width: 100%;
+}
+
+.form-field {
+    margin-bottom: 1rem;
+    width: 100%;
+}
+
+    .form-field label {
+        display: block;
+        margin-bottom: 0.5rem;
+        text-align: left;
+    }
+
+    .form-field input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d3e2;
+        border-radius: 0.35rem;
+    }
+
+.btn-primary {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+}
+
+/* Center the login form elements */
+.p-5 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+    /* Make sure form takes full width */
+    .p-5 form {
+        width: 100%;
+    }
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .card {
+        margin: 2rem;
+    }
+}

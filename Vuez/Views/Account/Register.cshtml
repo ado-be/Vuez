@@ -1,0 +1,23 @@
+﻿@model vuez.Models.LoginModel
+@{
+    Layout = "_LoginLayout"; // Použite nový layout pre prihlásenie
+}
+
+<h2>Prihlásenie</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+
+<form asp-action="Login" method="post">
+    <div class="mb-3">
+        <label class="form-label">Meno:</label>
+        <input type="text" class="form-control" asp-for="Username" required />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Heslo:</label>
+        <input type="password" class="form-control" asp-for="Password" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Prihlásiť sa</button>
+</form>

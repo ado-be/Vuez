@@ -1,0 +1,295 @@
+﻿@model vuez.Models.ViewModels.ConfigurationSheetViewModel
+
+<h1>Konfiguračný list aplikačního programového vybavenia APV</h1>
+
+<!-- Výpis validácií -->
+@Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+<form asp-action="Create" method="post" id="createForm">
+    <div class="protocol-container">
+        <table class="header-table">
+            <tr>
+                <td class="logo">
+                    <img src="~/images/VUEZlogo.png" alt="VUEZ Logo" class="logo-img" />
+                </td>
+                <td class="company-name">
+                    <h3>V Ú E Z, a.s.</h3>
+                </td>
+            </tr>
+        </table>
+
+        <table class="form-table">
+            <tr>
+                <td><label>Názov APV:</label></td>
+                <td>
+                    <input asp-for="ConfigurationSheet.Apvname" class="form-control" />
+                    <span asp-validation-for="ConfigurationSheet.Apvname" class="text-danger"></span>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Číslo APV:</label></td>
+                <td>
+                    <input asp-for="ConfigurationSheet.Apvnumber" class="form-control" />
+                    <span asp-validation-for="ConfigurationSheet.Apvnumber" class="text-danger"></span>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Číslo zmluvy:</label></td>
+                <td><input asp-for="ConfigurationSheet.ContractNumber" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label>Zákazkové číslo:</label></td>
+                <td>
+                    <input asp-for="ConfigurationSheet.OrderNumber" class="form-control" />
+                    <span asp-validation-for="ConfigurationSheet.OrderNumber" class="text-danger"></span>
+                </td>
+            </tr>
+            <tr>
+                <td><label>Spracovateľ:</label></td>
+                <td><input asp-for="ConfigurationSheet.Processor" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label>Súvisiace HW a SW:</label></td>
+                <td><input asp-for="ConfigurationSheet.RelatedHwsw" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label>Súvisiaca dokumentácia:</label></td>
+                <td><input asp-for="ConfigurationSheet.RelatedDocumentation" class="form-control" /></td>
+            </tr>
+        </table>
+
+        <h2 class="protocol-title">Programové položky</h2>
+        <p class="alert alert-info">Pre pokračovanie na konfiguračný list je potrebné zadať aspoň jednu programovú položku.</p>
+
+        <table class="form-table">
+            <thead>
+                <tr>
+                    <th>Označenie</th>
+                    <th>Názov</th>
+                    <th>Poznámka</th>
+                </tr>
+            </thead>
+            <tbody id="itemTable">
+                @for (int i = 0; i < 3; i++)
+                {
+                    <tr>
+                        <td>
+                            <input name="ProgramItems[@i].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemCode" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[@i].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemName" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[@i].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div id="validationErrors" class="alert alert-danger" style="display: none;"></div>
+
+        <div class="form-group mt-3">
+            <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
+            <button type="submit" name="action" value="save" class="btn btn-primary">Uložiť</button>
+            <button type="submit" name="action" value="continue" class="btn btn-success">Pokračovať na konfiguračný list</button>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        let rowIndex = 3;
+
+        // Funkcia na overenie, či má riadok vyplnené hodnoty
+        function isRowFilled(row) {
+            const inputs = row.querySelectorAll('input');
+            return [...inputs].some(input => input.value.trim() !== "");
+        }
+
+        // Funkcia na overenie, či je riadok prázdny
+        function isRowEmpty(row) {
+            const inputs = row.querySelectorAll('input');
+            return [...inputs].every(input => input.value.trim() === "");
+        }
+
+        // Funkcia na pridanie nového riadku do tabuľky
+        function addNewRow() {
+            const table = document.getElementById("itemTable");
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                <td>
+                    <input name="ProgramItems[${rowIndex}].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                    <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemCode" data-valmsg-replace="true"></span>
+                </td>
+                <td>
+                    <input name="ProgramItems[${rowIndex}].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                    <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemName" data-valmsg-replace="true"></span>
+                </td>
+                <td>
+                    <input name="ProgramItems[${rowIndex}].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                </td>`;
+            table.appendChild(newRow);
+            rowIndex++;
+            
+            // Pridáme event listenery pre nový riadok
+            setupRowEventListeners(newRow);
+        }
+
+        // Nastavenie event listenerov pre riadok
+        function setupRowEventListeners(row) {
+            const codeInput = row.querySelector('.item-code');
+            const nameInput = row.querySelector('.item-name');
+            
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    validateRow(row);
+                    checkLastRowAndAddNewIfNeeded();
+                });
+            }
+            
+            if (nameInput) {
+                nameInput.addEventListener('input', function() {
+                    validateRow(row);
+                    checkLastRowAndAddNewIfNeeded();
+                });
+            }
+        }
+
+        // Validácia riadku
+        function validateRow(row) {
+            const codeInput = row.querySelector('.item-code');
+            const nameInput = row.querySelector('.item-name');
+            const codeErrorSpan = row.querySelector('span[data-valmsg-for$="].ItemCode"]');
+            const nameErrorSpan = row.querySelector('span[data-valmsg-for$="].ItemName"]');
+            
+            // Resetujeme validáciu
+            if (codeInput) {
+                codeInput.classList.remove('is-invalid');
+                if (codeErrorSpan) codeErrorSpan.textContent = "";
+            }
+            
+            if (nameInput) {
+                nameInput.classList.remove('is-invalid');
+                if (nameErrorSpan) nameErrorSpan.textContent = "";
+            }
+            
+            // Ak je riadok prázdny, nie je potrebné validovať
+            if (isRowEmpty(row)) return true;
+            
+            let isValid = true;
+            
+            // Ak je vyplnený kód alebo názov, musia byť vyplnené obe hodnoty
+            if (codeInput && nameInput) {
+                const hasCode = codeInput.value.trim() !== "";
+                const hasName = nameInput.value.trim() !== "";
+                
+                if (hasCode && !hasName) {
+                    nameInput.classList.add('is-invalid');
+                    if (nameErrorSpan) nameErrorSpan.textContent = "Názov položky je povinný, ak je vyplnený kód.";
+                    isValid = false;
+                }
+                
+                if (!hasCode && hasName) {
+                    codeInput.classList.add('is-invalid');
+                    if (codeErrorSpan) codeErrorSpan.textContent = "Kód položky je povinný, ak je vyplnený názov.";
+                    isValid = false;
+                }
+            }
+            
+            return isValid;
+        }
+
+        // Funkcia na kontrolu posledného riadku a pridanie nového, ak je to potrebné
+        function checkLastRowAndAddNewIfNeeded() {
+            const table = document.getElementById("itemTable");
+            const rows = table.getElementsByTagName("tr");
+            
+            if (rows.length > 0) {
+                const lastRow = rows[rows.length - 1];
+                
+                // Ak je posledný riadok vyplnený, pridáme nový prázdny riadok
+                if (isRowFilled(lastRow)) {
+                    let hasEmptyRow = false;
+                    
+                    // Skontrolujeme, či už nemáme prázdny riadok niekde v tabuľke
+                    for (let i = 0; i < rows.length - 1; i++) {
+                        if (isRowEmpty(rows[i])) {
+                            hasEmptyRow = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!hasEmptyRow) {
+                        addNewRow();
+                    }
+                }
+            }
+        }
+
+        // Validácia formulára pred odoslaním
+        document.getElementById('createForm').addEventListener('submit', function(e) {
+            const table = document.getElementById("itemTable");
+            const rows = table.getElementsByTagName("tr");
+            let hasFilledRow = false;
+            let hasErrors = false;
+            
+            // Validujeme všetky riadky a kontrolujeme, či máme aspoň jeden vyplnený riadok
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                
+                if (!isRowEmpty(row)) {
+                    hasFilledRow = true;
+                    
+                    // Ak riadok nie je validný, máme chybu
+                    if (!validateRow(row)) {
+                        hasErrors = true;
+                    }
+                }
+            }
+            
+            // Ak sú chyby, zabránime odoslaniu formulára
+            if (hasErrors) {
+                e.preventDefault();
+                
+                const errorDiv = document.getElementById('validationErrors');
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Prosím, opravte chyby vo formulári pred odoslaním.';
+                
+                return;
+            }
+            
+            // Ak užívateľ chce pokračovať a nemá vyplnené žiadne položky, zobrazíme potvrdenie
+            if (!hasFilledRow && e.submitter && e.submitter.getAttribute('value') === 'continue') {
+                const confirmContinue = confirm('Neboli zadané žiadne programové položky. Chcete pokračovať bez programových položiek?');
+                
+                if (!confirmContinue) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+            
+            // Pred odoslaním formulára odstránime prázdne riadky
+            for (let i = rows.length - 1; i >= 0; i--) {
+                if (isRowEmpty(rows[i])) {
+                    // Pre prázdne riadky nastavíme polia na null alebo ich môžeme úplne odstrániť
+                    // Používame CSS pre skrytie, aby sme nestratili poradie pri binding
+                    rows[i].style.display = 'none';
+                }
+            }
+        });
+
+        // Inicializujeme event listenery pre existujúce riadky
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.getElementById("itemTable");
+            const rows = table.getElementsByTagName("tr");
+            
+            for (let i = 0; i < rows.length; i++) {
+                setupRowEventListeners(rows[i]);
+            }
+        });
+    </script>
+}

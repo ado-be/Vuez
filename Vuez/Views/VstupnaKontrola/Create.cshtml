@@ -1,0 +1,146 @@
+﻿@model vuez.Models.VstupnaKontrola
+
+<div class="protocol-container">
+    <!-- Hlavička dokumentu -->
+    <table class="header-table">
+        <tr>
+            <td class="logo">
+                <img src="~/images/VUEZlogo.png" alt="VUEZ Logo" class="logo-img" />
+            </td>
+            <td class="company-name">
+                <h3>V U E Z, a.s.</h3>
+            </td>
+            <td class="protocol-number">
+                <strong>Číslo protokolu:</strong>
+                <input asp-for="CisloProtokolu" class="protocol-input" readonly />
+            </td>
+
+        </tr>
+    </table>
+
+    <!-- Názov protokolu -->
+    <h2 class="protocol-title">PROTOKOL: VSTUPNÁ TECHNICKÁ KONTROLA</h2>
+
+    <form asp-action="Create" method="post">
+        <!-- Hlavná tabuľka formulára -->
+        <table class="form-table">
+            <tr>
+                <td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td>
+                <td><input asp-for="NazovVyrobku" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Dodavatel">Dodávateľ:</label></td>
+                <td><input asp-for="Dodavatel" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td>
+                <td><input asp-for="ZakazkoveCislo" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="KontrolaPodla">Kontrola vykonaná podľa:</label></td>
+                <td><input asp-for="KontrolaPodla" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="SpravnostDodavky">Správnosť a kompletnosť zariadenia / dodávky:</label></td>
+                <td><input asp-for="SpravnostDodavky" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="ZnacenieMaterialu">Značenie materiálu:</label></td>
+                <td><input asp-for="ZnacenieMaterialu" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="CistotaPovrchu">Kontrola čistoty povrchu / vzhľadu / funkčnosti:</label></td>
+                <td><input asp-for="CistotaPovrchu" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Balenie">Kontrola balenia a konzervovania:</label></td>
+                <td><input asp-for="Balenie" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Poskodenie">Kontrola mech. poškodení:</label></td>
+                <td><input asp-for="Poskodenie" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="IneKroky">Iné inšpekčné kroky:</label></td>
+                <td><input asp-for="IneKroky" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Poznamky">Poznámky:</label></td>
+                <td><textarea asp-for="Poznamky" class="form-control"></textarea></td>
+            </tr>
+
+            <tr>
+                <td><label asp-for="Miesto">Miesto:</label></td>
+                <td colspan="3"><input asp-for="Miesto" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Datum">Dátum:</label></td>
+                <td colspan="3"><input asp-for="Datum" class="form-control" /></td>
+            </tr>
+
+            <!-- Podpisové obrázky -->
+            <tr>
+                
+                <td id="podpisPM" style="height: 100px;"></td>
+                <td id="podpisTK" style="height: 100px;"></td>
+            </tr>
+
+            <!-- Popisy -->
+            <tr>
+                
+                <td class="text-center">podpis projekt - manažéra</td>
+                <td class="text-center">pečiatka a podpis pracovníka TK</td>
+            </tr>
+
+        </table>
+
+       
+
+
+       
+
+        @* Manažér *@
+        @if (User.IsInRole("Manager"))
+        {
+            <button type="button" class="btn btn-outline-primary mb-2" onclick="podpisManager()">Podpísať ako projekt - manažér</button>
+        }
+
+        @* Technik *@
+        @if (User.IsInRole("Technician"))
+        {
+            <button type="button" class="btn btn-outline-danger mb-2" onclick="podpisTechnik()">Podpísať ako pracovník TK</button>
+        }
+
+
+
+     
+        <input type="hidden" id="podpisUrl" value="@ViewBag.PodpisUrl" />
+        <div class="submit-container" style="margin-bottom: 40px; margin-top: 20px; position: relative; clear: both;">
+            <button type="submit" class="btn btn-primary" style="display: block; width: 100%; margin-bottom: 10px;">Uložiť</button>
+            <a asp-action="Index" class="btn btn-secondary" style="display: block; width: 100%;">Späť na zoznam</a>
+        </div>
+
+    </form>
+    
+
+</div>
+
+
+<script>
+    const podpisUrl = document.getElementById('podpisUrl').value;
+
+    function podpisVeduci() {
+        if (!podpisUrl) return alert("Chýba podpis vedúceho.");
+        document.getElementById('podpisVeduciPrac').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+    }
+
+    function podpisManager() {
+        if (!podpisUrl) return alert("Chýba podpis manažéra.");
+        document.getElementById('podpisPM').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+    }
+
+    function podpisTechnik() {
+        if (!podpisUrl) return alert("Chýba podpis pracovníka TK.");
+        document.getElementById('podpisTK').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+    }
+</script>

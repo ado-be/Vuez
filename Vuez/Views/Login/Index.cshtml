@@ -1,0 +1,162 @@
+﻿@{
+    
+    ViewBag.Title = "Prihlásenie";
+}
+
+@if (TempData["Error"] != null)
+{
+    <p style="color: red; text-align: center;">@TempData["Error"]</p>
+}
+
+
+<style>
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    html, body {
+        height: 100%;
+        font-family: Arial, sans-serif;
+    }
+
+    .page-wrapper {
+        height: 80vh;
+        display: flex;
+        max-width: 12000px; /* Added max-width to contain the layout */
+        margin: 0 auto; /* Center the wrapper */
+    }
+
+    .container {
+        display: flex;
+        width: 100%;
+        height: 100%;
+    }
+
+    .slideshow {
+        flex: 3.5; /* Slightly wider proportion for images */
+        position: relative;
+        overflow: hidden;
+    }
+
+    .slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+    }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+    .login-container {
+        flex: 1.8;
+        background-color: #2b2b2b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .login-box {
+        width: 100%; /* Reduced width inside the container */
+        max-width: 650px; /* Maximum width for the login box */
+        padding: 30px;
+        background-color: #2b2b2b;
+        color: white;
+    }
+
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 24px;
+            color: #ffc800;
+        }
+
+        .login-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 14px;
+            color: #ddd;
+        }
+
+        .login-box input[type="text"],
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background-color: #ffc800;
+            color: black;
+            font-weight: bold;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+            .login-box button:hover {
+                background-color: #e0b700;
+            }
+
+    /* Responsive adjustments */
+</style>
+
+<div class="page-wrapper">
+    <div class="container">
+        <div class="slideshow">
+            <img class="slide active" src="~/images/IZVAR1.jpg" alt="Slide 1">
+            <img class="slide" src="~/images/IZVAR2.jpg" alt="Slide 2">
+            <img class="slide" src="~/images/IZVAR3.png" alt="Slide 3">
+        </div>
+
+        <div class="login-container">
+            <div class="login-box">
+                <h2>Prihlásenie</h2>
+                <form method="post" asp-controller="Login" asp-action="Authenticate">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <label for="username">Email</label>
+                    <input type="text" name="username" id="username" required autocomplete="username" />
+
+                    <label for="password">Heslo</label>
+                    <input type="password" name="password" id="password" required autocomplete="current-password" />
+
+                    <button type="submit">Prihlásiť sa</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const slides = document.querySelectorAll('.slide');
+    let current = 0;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            if (i === index) slide.classList.add('active');
+        });
+    }
+
+    function nextSlide() {
+        current = (current + 1) % slides.length;
+        showSlide(current);
+    }
+
+    setInterval(nextSlide, 4000);
+    showSlide(current);
+</script>

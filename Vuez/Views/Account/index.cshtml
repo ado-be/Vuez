@@ -1,0 +1,63 @@
+﻿
+@model vuez.Models.ViewModels.UserProfileViewModel
+
+
+@{
+    ViewData["Title"] = "Správa konta";
+}
+
+<h1>Správa konta @User.Identity.Name</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+
+<form asp-action="UpdateProfile" asp-controller="Account" method="post" enctype="multipart/form-data">
+    @Html.AntiForgeryToken()
+
+    <div class="form-group">
+        <label asp-for="Name">Meno</label>
+        <input asp-for="Name" class="form-control" placeholder="Zadaj meno" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Surname">Priezvisko</label>
+        <input asp-for="Surname" class="form-control" placeholder="Zadaj priezvisko" />
+        <span asp-validation-for="Surname" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Email">E-mail</label>
+        <input asp-for="Email" class="form-control" placeholder="Zadaj e-mail" />
+        <span asp-validation-for="Email" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SignatureFile">Podpis (obrázok)</label>
+        <input asp-for="SignatureFile" type="file" class="form-control" accept="image/*" />
+        <span asp-validation-for="SignatureFile" class="text-danger"></span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SignatureImagePath))
+    {
+        <div class="form-group">
+            <label>Aktuálny podpis:</label><br />
+            <img src="@Model.SignatureImagePath" alt="Podpis" style="max-height: 150px;" />
+        </div>
+    }
+
+    <button type="submit" class="btn btn-primary">Uložiť</button>
+</form>
+
+<br />
+
+<a href="@Url.Action("ChangePassword", "Account")" class="btn btn-success">Zmena hesla</a>
+
+@section Scripts {
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

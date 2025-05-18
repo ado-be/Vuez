@@ -1,0 +1,24 @@
+﻿@model vuez.Models.VstupnaKontrola
+
+<h2>Odstrániť protokol</h2>
+
+<h3>Si si istý, že chceš odstrániť tento protokol?</h3>
+<div>
+    <h4>Číslo protokolu: @Model.CisloProtokolu</h4>
+    <dl class="row">
+        <dt class="col-sm-2">Názov výrobku:</dt>
+        <dd class="col-sm-10">@Model.NazovVyrobku</dd>
+
+        <dt class="col-sm-2">Dodávateľ:</dt>
+        <dd class="col-sm-10">@Model.Dodavatel</dd>
+
+        <dt class="col-sm-2">Zákazkové číslo:</dt>
+        <dd class="col-sm-10">@Model.ZakazkoveCislo</dd>
+    </dl>
+</div>
+
+<form asp-action="DeleteConfirmed" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Odstrániť</button>
+    <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
+</form>

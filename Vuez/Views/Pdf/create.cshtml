@@ -1,0 +1,52 @@
+﻿@model vuez.Models.PdfCreateModel
+
+<div class="container mt-5">
+    <h2>Create and Generate PDF</h2>
+
+    <form asp-action="Create" method="post">
+        <div class="form-group mt-3">
+            <label asp-for="ProtocolName">Protocol Name:</label>
+            <input asp-for="ProtocolName" class="form-control" id="ProtocolName" />
+            <span asp-validation-for="ProtocolName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="ProtocolSE">Protocol SE:</label>
+            <input asp-for="ProtocolSE" class="form-control" id="ProtocolSE" />
+            <span asp-validation-for="ProtocolSE" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="ProtocolSupplier">Supplier Protocol:</label>
+            <input asp-for="ProtocolSupplier" class="form-control" id="ProtocolSupplier" />
+            <span asp-validation-for="ProtocolSupplier" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="ListCount">List Count:</label>
+            <input asp-for="ListCount" type="number" class="form-control" id="ListCount" />
+            <span asp-validation-for="ListCount" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="Type">Type:</label>
+            <input asp-for="Type" class="form-control" id="Type" />
+            <span asp-validation-for="Type" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mt-3">
+            <label asp-for="Producer">Producer:</label>
+            <input asp-for="Producer" class="form-control" id="Producer" />
+            <span asp-validation-for="Producer" class="text-danger"></span>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-primary">Generate PDF</button>
+            <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+}

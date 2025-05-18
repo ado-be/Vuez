@@ -1,0 +1,62 @@
+﻿@model vuez.Models.ViewModels.ProgramItemConfigViewModel
+<h1>Konfiguračný list</h1>
+
+<div class="protocol-container">
+    <h2>Základné informácie</h2>
+    <table class="header-table">
+        <tr>
+            <td class="logo">
+                <img src="~/images/VUEZlogo.png" alt="VUEZ Logo" class="logo-img" />
+            </td>
+            <td class="company-name">
+                <h3>V Ú E Z, a.s.</h3>
+            </td>
+        </tr>
+    </table>
+
+    <table class="form-table">
+        @if (Model.AllItems != null && Model.AllItems.Any())
+        {
+            var firstItem = Model.AllItems.First();
+            <tr>
+                <td>Názov prvej položky:</td>
+                <td>@firstItem.ItemName</td>
+            </tr>
+            <tr>
+                <td>Kód prvej položky:</td>
+                <td>@firstItem.ItemCode</td>
+            </tr>
+          
+         
+        }
+        <tr>
+            <td>Názov APV:</td>
+            <td>@Model.ConfigurationSheet.Apvname</td>
+        </tr>
+        <tr>
+            <td>Číslo zmluvy:</td>
+            <td>@Model.ConfigurationSheet.Apvnumber</td>
+        </tr>
+        <tr>
+            <td>Číslo zákazky:</td>
+            <td>@Model.ConfigurationSheet.OrderNumber</td>
+        </tr>
+
+        <tr>
+            <td>Spracovateľ:</td>
+           
+        </tr>
+      
+
+        <!-- Ďalšie informácie o konfigurácii -->
+    </table>
+
+    
+   
+
+    <div class="form-group mt-3">
+        <a asp-action="ExamRecord"
+           asp-route-configId="@Model.ConfigurationSheet.ConfigId"
+           class="btn btn-primary">Pokračovať na záznam o kontrole</a>
+    </div>
+</div>

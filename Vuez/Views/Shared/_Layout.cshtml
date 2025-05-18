@@ -5,45 +5,835 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - vuez</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/loginTheme.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/vuez.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/png" sizes="16x16" href="~/images/VUEZlogo-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="~/images/VUEZlogo-removebg-preview.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="~/images/VUEZlogo-removebg-preview.png">
+
+    <style>
+        /* Základné štýly */
+        body {
+            overflow-x: hidden;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+
+        .login-form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+            .login-form-container label {
+                display: block;
+                margin-bottom: 8px;
+                width: 100%;
+            }
+
+            .login-form-container input {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 15px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+            }
+
+            .login-form-container h1,
+            .login-form-container h2 {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+
+            .login-form-container button {
+                display: block;
+                width: 100%;
+                margin-top: 15px;
+                padding: 10px;
+                background-color: #1b6ec2;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+        #layoutSidenav {
+            display: flex;
+        }
+
+        #layoutSidenav_nav {
+            flex-basis: 250px;
+            flex-shrink: 0;
+            transition: transform .15s ease-in-out;
+            z-index: 1038;
+            transform: translateX(0);
+            background-color: #ffffff;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        #layoutSidenav_content {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+            flex-grow: 1;
+            min-height: calc(100vh - 56px);
+            margin-left: 0;
+            background-color: #f9f9f9;
+        }
+
+        .sb-sidenav-toggled #layoutSidenav_nav {
+            transform: translateX(-250px);
+        }
+
+        .sb-sidenav {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex-wrap: nowrap;
+            background-color: #fff !important;
+            color: #212529;
+        }
+
+            .sb-sidenav .sb-sidenav-menu {
+                flex-grow: 1;
+                overflow-y: auto;
+            }
+
+                .sb-sidenav .sb-sidenav-menu .nav {
+                    flex-direction: column;
+                    flex-wrap: nowrap;
+                }
+
+                    .sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-heading {
+                        padding: 1.75rem 1rem 0.75rem;
+                        font-size: 0.75rem;
+                        font-weight: bold;
+                        text-transform: uppercase;
+                    }
+
+                    .sb-sidenav .sb-sidenav-menu .nav .nav-link {
+                        display: flex;
+                        align-items: center;
+                        padding: 0.75rem 1rem;
+                        margin: 0.2rem 0.5rem;
+                        border-radius: 0.375rem;
+                    }
+
+                        .sb-sidenav .sb-sidenav-menu .nav .nav-link .sb-nav-link-icon {
+                            margin-right: 0.5rem;
+                        }
+
+                        .sb-sidenav .sb-sidenav-menu .nav .nav-link .sb-sidenav-collapse-arrow {
+                            margin-left: auto;
+                            transition: transform .15s ease;
+                        }
+
+                        .sb-sidenav .sb-sidenav-menu .nav .nav-link.collapsed .sb-sidenav-collapse-arrow {
+                            transform: rotate(-90deg);
+                        }
+
+                    .sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-nested {
+                        margin-left: 1.5rem;
+                        flex-direction: column;
+                    }
+
+            .sb-sidenav .nav-link {
+                color: #212529;
+            }
+
+                .sb-sidenav .nav-link:hover,
+                .sb-sidenav .nav-link.active {
+                    background-color: #f0f7ff;
+                    color: #0d6efd;
+                }
+
+        /* Mobilné menu štýly */
+        .mobile-menu-container {
+            display: none;
+            position: absolute;
+            top: 56px;
+            right: 0;
+            background: white;
+            width: 200px;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+            z-index: 1060;
+            border-radius: 0.375rem;
+            padding: 10px;
+        }
+
+            .mobile-menu-container.show {
+                display: block;
+            }
+
+            .mobile-menu-container .nav-item {
+                width: 100%;
+                padding: 8px 0;
+            }
+
+            .mobile-menu-container .nav-link {
+                width: 100%;
+                padding: 8px;
+                border-radius: 0.25rem;
+                transition: all 0.2s;
+            }
+
+                .mobile-menu-container .nav-link:hover {
+                    background-color: #f0f7ff;
+                }
+
+        /* Skrývanie štandardného menu na malých obrazovkách */
+        @@media (max-width: 767.98px) {
+            .navbar-collapse {
+                display: none !important;
+            }
+
+            .mobile-menu-toggle {
+                display: block !important;
+            }
+
+            #layoutSidenav_nav {
+                position: fixed;
+                width: 250px;
+                height: 100%;
+                z-index: 1040;
+            }
+
+            .sb-sidenav-toggled #layoutSidenav_content {
+                margin-left: 0;
+            }
+
+            #layoutSidenav_content {
+                width: 100%;
+            }
+        }
+
+        /* Pre väčšie obrazovky */
+        @@media (min-width: 768px) {
+            .mobile-menu-container {
+                display: none !important;
+            }
+
+            .mobile-menu-toggle {
+                display: none !important;
+            }
+        }
+
+        /* Moderné štýly pre tabuľky */
+        .content-card {
+            background-color: #ffffff;
+            border-radius: 0.75rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .content-card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+            .content-card-header h2 {
+                margin: 0;
+                font-size: 1.5rem;
+                font-weight: 600;
+                color: #333;
+            }
+
+        .content-card-body {
+            padding: 0;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 0;
+        }
+
+        .modern-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background-color: #fff;
+            margin-bottom: 0;
+        }
+
+            .modern-table thead th {
+                background-color: #f8f9fa;
+                color: #6c757d;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                letter-spacing: 0.05em;
+                padding: 1rem 1.5rem;
+                border: none;
+            }
+
+            .modern-table tbody tr {
+                transition: all 0.2s;
+            }
+
+                .modern-table tbody tr:hover {
+                    background-color: #f8f9fa;
+                }
+
+            .modern-table tbody td {
+                padding: 1rem 1.5rem;
+                border-top: 1px solid #f2f2f2;
+                vertical-align: middle;
+                color: #495057;
+            }
+
+            .modern-table tbody tr:first-child td {
+                border-top: none;
+            }
+
+        /* Tlačidlá v tabuľkách */
+        .btn {
+    font-weight: 500;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+    border: none;
+    padding: 0.375rem 0.75rem;
+    font-size: 0.85rem;
+    margin-right: 0.5rem;
+}
+
+/* Primárne tlačidlá (modré) */
+.btn-primary {
+    background-color: #007bff;
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}
+
+/* Tlačidlá v tabuľkách */
+.btn-action {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.85rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+    border: none;
+    font-weight: 500;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: #fff;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+        .btn-create {
+            background-color: #007bff;
+            color: #fff;
+            padding: 0.375rem 0.75rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            border: none;
+            transition: all 0.2s;
+            display: inline-block; /* Zmena z block na inline-block */
+            width: auto; /* Nastavenie automatickej šírky namiesto 100% */
+            margin-left: auto; /* Pre zarovnanie doprava v content-card-header */
+        }
+
+            .btn-create:hover {
+                background-color: #0069d9;
+            }
+
+        /* Ak je tlačidlo v hlavičke content-card, zarovnať doprava */
+        .content-card-header .btn-create {
+            margin-left: auto;
+        }
+/* Tlačidlá s ikonami */
+.btn i {
+    margin-right: 0.5rem;
+}
+
+/* Tlačidlá pre formuláre */
+.form-group .btn {
+    margin-top: 1rem;
+}
+
+/* Na mobilných zariadeniach */
+    @@media (max-width: 767.98px) {
+    .btn-action {
+        margin-bottom: 0.25rem;
+    }
+}
+
+        /* Responzívne tabuľky na mobiloch */
+        @@media (max-width: 767.98px) {
+            .modern-table-responsive thead {
+                display: none;
+            }
+
+            .modern-table-responsive tbody tr {
+                display: block;
+                padding: 1rem;
+                border-bottom: 1px solid #f2f2f2;
+            }
+
+                .modern-table-responsive tbody tr:last-child {
+                    border-bottom: none;
+                }
+
+            .modern-table-responsive tbody td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                text-align: right;
+                padding: 0.5rem 0;
+                border: none;
+            }
+
+                .modern-table-responsive tbody td::before {
+                    content: attr(data-label);
+                    font-weight: 600;
+                    margin-right: 1rem;
+                    text-align: left;
+                    color: #6c757d;
+                }
+
+            .modern-table-responsive .actions-column {
+                justify-content: flex-end;
+                margin-top: 0.5rem;
+            }
+
+            .btn-action {
+                margin-bottom: 0.25rem;
+            }
+        }
+
+        /* Status indikátory a badges */
+        .badge {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 0.25rem;
+            display: inline-block;
+        }
+
+        .badge-primary {
+            background-color: #e6f0ff;
+            color: #0d6efd;
+        }
+
+        .badge-success {
+            background-color: #e6fff0;
+            color: #198754;
+        }
+
+        .badge-warning {
+            background-color: #fff8e6;
+            color: #ffc107;
+        }
+
+        /* Zlepšené hlavičky */
+        .navbar {
+            background-color: #ffffff !important;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+
+        .navbar-brand {
+            font-weight: 600;
+        }
+
+        .nav-link {
+            font-weight: 500;
+        }
+
+     
+        .content-header {
+            margin-bottom: 1.5rem;
+        }
+
+            .content-header h1 {
+                font-size: 1.75rem;
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 0.5rem;
+            }
+
+        .content-description {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+
+      
+        .action-panel {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-panel-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .action-panel-right {
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            margin-right: 1rem;
+        }
+
+            .search-box input {
+                padding: 0.5rem 1rem 0.5rem 2.5rem;
+                border-radius: 0.375rem;
+                border: 1px solid #dee2e6;
+                width: 250px;
+                transition: all 0.2s;
+            }
+
+                .search-box input:focus {
+                    border-color: #0d6efd;
+                    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+                    outline: none;
+                }
+
+            .search-box i {
+                position: absolute;
+                left: 1rem;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #6c757d;
+            }
+    </style>
+
+    @RenderSection("Styles", required: false)
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">vuez</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Domov</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Druha</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2024 - vuez - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    @if (!(ViewContext.RouteData.Values["controller"]?.ToString() == "Login" &&
+    ViewContext.RouteData.Values["action"]?.ToString() == "Index"))
+    {
+        <header>
+            <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+                <div class="container-fluid">
+                    <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                        <img src="~/images/VUEZlogo.png" alt="Vuez logo" style="height: 40px;">
+                    </a>
+                    <button class="btn btn-link btn-sm me-2" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+                  
+                    <button class="btn btn-link mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-user"></i>
+                    </button>
+
+                
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Index">
+                                        <i class="fas fa-user-circle"></i> @User.Identity.Name
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/Login/Logout">Odhlásiť sa</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Login" asp-action="Index">Prihlásenie</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Register" asp-action="Index">Registrácia</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
+              
+                    <div class="mobile-menu-container" id="mobileMenu">
+                        <ul class="navbar-nav">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Account" asp-action="Index">
+                                        <i class="fas fa-user-circle"></i> @User.Identity.Name
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="/Login/Logout">Odhlásiť sa</a>
+                                </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Login" asp-action="Index">Prihlásenie</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" asp-controller="Register" asp-action="Index">Registrácia</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+        </header>
+    }
+
+    @if (ViewContext.RouteData.Values["controller"]?.ToString() == "Login" &&
+    ViewContext.RouteData.Values["action"]?.ToString() == "Index")
+    {
+        <div class="login-form-container">
+            @RenderBody()
         </div>
-    </footer>
+    }
+    else
+    {
+        <div id="layoutSidenav">
+            <div id="layoutSidenav_nav">
+                <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+                    <div class="sb-sidenav-menu">
+                        <div class="nav">
+                            <a class="nav-link" asp-controller="Home" asp-action="Index"><i class="fas fa-home sb-nav-link-icon"></i> Domov</a>
+                            <a class="nav-link" asp-controller="Pdf" asp-action="Index"><i class="fas fa-file-pdf sb-nav-link-icon"></i> PDF Dokumenty</a>
+                            <a class="nav-link" asp-controller="Indicators" asp-action="Index"><i class="fas fa-tachometer-alt sb-nav-link-icon"></i> Meradlá</a>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#kontrolyCollapse">
+                                <i class="fas fa-check sb-nav-link-icon"></i> Kontroly
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="kontrolyCollapse" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" asp-controller="VstupnaKontrola" asp-action="Index">Vstupná kontrola</a>
+                                    <a class="nav-link" asp-controller="MedzioperacnaKontrola" asp-action="Index">Medzioperačná kontrola</a>
+                                    <a class="nav-link" asp-controller="VystupnaKontrola" asp-action="Index">Výstupná kontrola</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#ndtCollapse">
+                                <i class="fas fa-microscope sb-nav-link-icon"></i> NDT
+                                <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                            </a>
+                            <div class="collapse" id="ndtCollapse" data-bs-parent="#sidenavAccordion">
+                                <nav class="sb-sidenav-menu-nested nav">
+                                    <a class="nav-link" asp-controller="Protocols" asp-action="Visual">Vizuálne skúšky</a>
+                                    <a class="nav-link" asp-controller="Protocols" asp-action="Capillary">Kapilárne skúšky</a>
+                                </nav>
+                            </div>
+                            <a class="nav-link" asp-controller="VR" asp-action="Index"><i class="fas fa-vr-cardboard sb-nav-link-icon"></i> Virtuálna realita</a>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a class="nav-link" asp-controller="Admin" asp-action="ManageUsers"><i class="fas fa-users-cog sb-nav-link-icon"></i> Správa používateľov</a>
+                            }
+                        </div>
+                    </div>
+                </nav>
+            </div>
+            <div id="layoutSidenav_content">
+                <main>
+                    <div class="container-fluid px-4 py-4">
+                        @RenderBody()
+                    </div>
+                </main>
+             
+            </div>
+        </div>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    document.body.classList.toggle('sb-sidenav-toggled');
+                    localStorage.setItem('sb|sidebar-toggle', document.body.classList.contains('sb-sidenav-toggled'));
+                });
+                if (localStorage.getItem('sb|sidebar-toggle') === 'true') {
+                    document.body.classList.add('sb-sidenav-toggled');
+                }
+            }
+
+            const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            if (mobileMenuToggle && mobileMenu) {
+                mobileMenuToggle.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    mobileMenu.classList.toggle('show');
+                });
+
+            
+                const mobileNavLinks = mobileMenu.querySelectorAll('.nav-link');
+                mobileNavLinks.forEach(function (link) {
+                    link.addEventListener('click', function () {
+                        mobileMenu.classList.remove('show');
+                    });
+                });
+
+              
+                document.addEventListener('click', function (event) {
+                    if (!mobileMenu.contains(event.target) && !mobileMenuToggle.contains(event.target)) {
+                        mobileMenu.classList.remove('show');
+                    }
+                });
+            }
+
+          
+            function handleWindowResize() {
+                if (window.innerWidth <= 768) {
+                    document.body.classList.add('sb-sidenav-toggled');
+                }
+            }
+
+        
+            handleWindowResize();
+
+          
+            window.addEventListener('resize', handleWindowResize);
+
+           
+            function modernizeTables() {
+            
+                const tables = document.querySelectorAll('table.table');
+
+                tables.forEach(function (table) {
+                 
+                    table.classList.add('modern-table', 'modern-table-responsive');
+
+                    
+                    let parent = table.parentElement;
+                    let wrapperFound = false;
+
+                    
+                    while (parent && parent !== document.body) {
+                        if (parent.classList.contains('content-card') || parent.classList.contains('table-container')) {
+                            wrapperFound = true;
+                            break;
+                        }
+                        parent = parent.parentElement;
+                    }
+
+                    if (!wrapperFound) {
+                       
+                        const headingElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+                        let tableHeading = null;
+                        let tableContainer = table.parentElement;
+
+                        headingElements.forEach(function (heading) {
+                            if (!tableHeading) {
+                                const headingElement = tableContainer.querySelector(heading);
+                                if (headingElement && headingElement.parentElement === tableContainer) {
+                                    tableHeading = headingElement;
+                                }
+                            }
+                        });
+
+                       
+                        const contentCard = document.createElement('div');
+                        contentCard.className = 'content-card';
+
+                        
+                        if (tableHeading) {
+                            const contentCardHeader = document.createElement('div');
+                            contentCardHeader.className = 'content-card-header';
+
+                        
+                            tableHeading.remove();
+
+                            const headerTitle = document.createElement('h2');
+                            headerTitle.innerHTML = tableHeading.innerHTML;
+                            contentCardHeader.appendChild(headerTitle);
+
+                            // Nájdi tlačidlo "Create New..."
+                            const createBtn = tableContainer.querySelector('a.btn-primary, button.btn-primary');
+                            if (createBtn) {
+                                createBtn.classList.add('btn-create');
+                                createBtn.remove();
+                                contentCardHeader.appendChild(createBtn);
+                            }
+
+                            contentCard.appendChild(contentCardHeader);
+                        }
+
+                        // Vytvorenie content body a table container
+                        const contentCardBody = document.createElement('div');
+                        contentCardBody.className = 'content-card-body';
+
+                        const newTableContainer = document.createElement('div');
+                        newTableContainer.className = 'table-container';
+
+                        // Presuň tabuľku
+                        table.remove();
+                        newTableContainer.appendChild(table);
+                        contentCardBody.appendChild(newTableContainer);
+                        contentCard.appendChild(contentCardBody);
+
+                        // Vlož content card do pôvodného kontainera
+                        tableContainer.appendChild(contentCard);
+                    }
+
+                    // Pridanie data-label atribútov pre responzívne zobrazenie
+                    const headerCells = table.querySelectorAll('thead th');
+                    const headerLabels = Array.from(headerCells).map(cell => cell.textContent.trim());
+
+                    const rows = table.querySelectorAll('tbody tr');
+                    rows.forEach(function (row) {
+                        const cells = row.querySelectorAll('td');
+                        cells.forEach(function (cell, index) {
+                            if (index < headerLabels.length) {
+                                cell.setAttribute('data-label', headerLabels[index]);
+                            }
+
+                            // Upravenie action tlačidiel
+                            const actionBtns = cell.querySelectorAll('.btn');
+                            if (actionBtns.length > 0) {
+                                cell.classList.add('actions-column');
+
+                                actionBtns.forEach(function (btn) {
+                                    btn.classList.add('btn-action');
+
+                                    if (btn.textContent.trim().toLowerCase() === 'edit') {
+                                        btn.classList.add('btn-edit');
+                                        btn.innerHTML = '<i class="fas fa-edit"></i> Upraviť';
+                                    } else if (btn.textContent.trim().toLowerCase() === 'delete') {
+                                        btn.classList.add('btn-delete');
+                                        btn.innerHTML = '<i class="fas fa-trash-alt"></i> Vymazať';
+                                    }
+                                });
+                            }
+                        });
+                    });
+                });
+            }
+
+            // Volanie funkcie na modernizáciu tabuliek
+            modernizeTables();
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

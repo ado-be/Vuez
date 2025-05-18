@@ -1,29 +1,426 @@
 html {
-  font-size: 14px;
-  
+    font-size: 14px;
 }
-
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
+@media (max-width: 767px) {
+    .protocol-container, .page {
+        width: 100%;
+        padding: 10px;
+        border-width: 1px;
+    }
 
+    .header-table, .form-table, .signature-table {
+        font-size: 12px;
+    }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-   
-}
+        .form-table td,
+        .header-table td {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
 
-html {
-  position: relative;
-  min-height: 100%;
+        /* ADD THIS BLOCK - Fix for signature table on mobile */
+        .signature-table td {
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: center;
+            border-bottom: 1px solid black;
+        }
+
+        .signature-table tr:last-child td:last-child {
+            border-bottom: none;
+        }
+    /* END OF ADDITION */
+
+    .logo, .company-name, .protocol-number {
+        text-align: center;
+    }
+
+    .protocol-title {
+        font-size: 16px;
+    }
+
+    .protocol-input {
+        font-size: 12px;
+    }
+
+    .btn-primary, .btn-secondary {
+        width: 100%;
+        margin-bottom: 10px;
+    }
 }
 
 body {
     margin-bottom: 60px;
-    background-color: #FAFAD2;
-    margin-bottom: 60px;
+    background-color: #e9c46a;
+    justify-content: center;
+    align-items: center;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.homepage-image {
+    max-width: 80%;
+    border: 3px solid #258cfb;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.image-section {
+    padding: 10px;
+    text-align: center;
+    border-radius: 10px;
+    margin: 20px auto;
+    max-width: 90%;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+.paper {
+    width: 210mm;
+    padding: 10mm;
+    margin: auto;
+    background: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    border: 1px solid black;
+}
+
+.logo img {
+    max-width: 100px;
+    height: auto;
+}
+
+.title {
+    text-align: center;
+    flex: 1;
+}
+
+    .title h1,
+    .title h2 {
+        margin: 0;
+        font-size: 16px;
+        text-transform: uppercase;
+    }
+
+.protocol-info {
+    flex-shrink: 0;
+    font-size: 12px;
+    border-left: 2px solid black;
+    padding-left: 10px;
+}
+
+    .protocol-info table {
+        width: 100%;
+        font-size: 12px;
+        border-collapse: collapse;
+    }
+
+    .protocol-info td {
+        padding: 2px 5px;
+    }
+
+.details-section {
+    border-top: 2px solid black;
+    margin-top: 10px;
+    padding-top: 5px;
+}
+
+    .details-section table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+
+    .details-section td {
+        padding: 3px 5px;
+        border: 1px solid black;
+        text-align: left;
+    }
+
+    .details-section input {
+        width: 95%;
+        padding: 3px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+    }
+
+.equipment-section {
+    margin-top: 10px;
+}
+
+    .equipment-section table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        border: 1px solid black;
+    }
+
+    .equipment-section th,
+    .equipment-section td {
+        padding: 5px;
+        border: 1px solid black;
+        text-align: center;
+    }
+
+    .equipment-section th {
+        background: #f4f4f4;
+    }
+
+.results-section {
+    margin-top: 10px;
+    border-top: 2px solid black;
+    padding-top: 5px;
+    font-size: 12px;
+}
+
+    .results-section p {
+        margin: 5px 0;
+    }
+
+.footer {
+    margin-top: 10px;
+    font-size: 12px;
+    text-align: right;
+    border-top: 2px solid black;
+    padding-top: 5px;
+}
+
+.organization-section {
+    margin-top: 10px;
+    border-top: 2px solid black;
+    padding-top: 10px;
+}
+
+    .organization-section table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+
+    .organization-section td {
+        padding: 5px;
+        border: 1px solid black;
+    }
+
+    .organization-section input {
+        width: 95%;
+        padding: 3px;
+        border: 1px solid #ddd;
+        box-sizing: border-box;
+    }
+
+        .organization-section input:focus {
+            border-color: #000;
+            outline: none;
+        }
+
+.equipment-section h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+    border-bottom: 1px solid black;
+    padding-bottom: 5px;
+}
+
+.results-section h3 {
+    font-size: 14px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    border-bottom: 1px solid black;
+    padding-bottom: 5px;
+}
+
+.results-section p {
+    margin: 10px 0;
+}
+
+.control-summary {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+    .control-summary td {
+        padding: 5px;
+        border: 1px solid black;
+        vertical-align: top;
+    }
+
+        .control-summary td strong {
+            font-weight: bold;
+        }
+
+.page {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid black;
+    background-color: #fff;
+    box-sizing: border-box;
+}
+
+.protocol-container {
+    max-width: 800px;
+    width: 100%;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border: 2px solid black;
+    box-sizing: border-box;
+}
+
+.header-table {
+    width: 100%;
+    border: 2px solid black;
+    border-collapse: collapse;
+}
+
+    .header-table td {
+        border: 2px solid black;
+        padding: 10px;
+        text-align: center;
+    }
+
+.logo {
+    width: 150px;
+    text-align: center;
+}
+
+.logo-img {
+    width: 100%;
+    height: auto;
+}
+
+.company-name {
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.protocol-number {
+    font-size: 14px;
+    text-align: left;
+}
+
+.protocol-input {
+    width: 100%;
+    border: none;
+    font-size: 14px;
+    text-align: right;
+}
+
+.protocol-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    margin: 15px 0;
+    border-bottom: 2px solid black;
+    padding-bottom: 5px;
+}
+
+.form-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid black;
+}
+
+    .form-table td {
+        border: 1px solid black;
+        padding: 8px;
+    }
+
+.form-control {
+    width: 100%;
+    padding: 5px;
+    border: none;
+}
+
+.signature-table {
+    width: 100%;
+    margin-top: 20px;
+    border: 2px solid black;
+    /* ADD THIS LINE */
+    table-layout: fixed;
+}
+
+    .signature-table td {
+        text-align: center;
+        padding: 15px;
+        /* ADD THIS LINE */
+        word-wrap: break-word;
+    }
+
+.submit-container {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+}
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+/* ADD THIS SECTION FOR PRINT STYLES */
+@media print {
+    body {
+        background-color: white !important;
+    }
+
+    .protocol-container, .page {
+        border: none;
+        width: 100%;
+        max-width: 100%;
+        box-shadow: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .submit-container, .btn-primary, .btn-secondary {
+        display: none;
+    }
+
+    /* Ensure tables don't break across pages */
+    .header-table, .form-table, .signature-table {
+        page-break-inside: avoid;
+    }
 }

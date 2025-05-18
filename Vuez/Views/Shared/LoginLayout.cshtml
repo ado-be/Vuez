@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <!-- Font Awesome (pre ikony, ak sú potrebné) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <!-- Google fonty (Nunito) -->
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,200i,300,300i,400,400i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+    <!-- Vlastné štýly pre prihlásenie -->
+    <link href="@Url.Content("~/css/loginTheme.css")" rel="stylesheet" />
+
+    <!-- Pridané priame štýly pre login formulár -->
+    <style>
+        /* Štýly pre prihlasovací formulár */
+        .bg-login-image {
+            background-image: url('~/images/VUEZlogo.png');
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .login-wrapper {
+            width: 100%;
+            display: block;
+        }
+
+        .form-field {
+            width: 100%;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+            .form-field label {
+                display: block;
+                width: 100%;
+                margin-bottom: 0.5rem;
+                text-align: left;
+            }
+
+            .form-field input {
+                display: block;
+                width: 100%;
+                padding: 0.75rem;
+                border: 1px solid #d1d3e2;
+                border-radius: 0.35rem;
+            }
+
+        button.btn-primary {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+        }
+
+        .p-5 form {
+            width: 100%;
+        }
+
+        /* Pomoc pre centrálny login box */
+        .login-form-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    @RenderBody()
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

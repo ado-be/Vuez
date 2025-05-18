@@ -1,0 +1,33 @@
+﻿@model List<vuez.Models.User>
+
+@{
+    ViewData["Title"] = "Správa používateľov";
+}
+
+<h2>Správa používateľov</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Meno</th>
+            <th>Rola</th>
+            <th>Akcia</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Role?.RoleName</td>
+                <td>
+                    <form asp-action="DeleteUser" asp-controller="Admin" asp-route-id="@user.Id" method="post" onsubmit="return confirm('Naozaj chceš odstrániť používateľa @user.UserName?');">
+                        <button type="submit">🗑️ Odstrániť</button>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-controller="Admin" asp-action="CreateUser">Pridať nového používateľa</a>

@@ -1,0 +1,32 @@
+﻿@{
+    ViewBag.Title = "Registrácia";
+}
+
+<h2>Registrácia</h2>
+
+@if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+{
+    <p style="color: red;">@ViewBag.ErrorMessage</p>
+}
+
+<form method="post" asp-action="Register">
+    <div>
+        <label>Meno:</label>
+        <input type="text" name="username" required />
+    </div>
+
+    <div>
+        <label>Heslo:</label>
+        <input type="password" name="password" required />
+    </div>
+
+    <div>
+        <label>Rola:</label>
+        <select name="role">
+            <option value="User">User</option>
+            <option value="Admin">Admin</option>
+        </select>
+    </div>
+
+    <button type="submit">Registrovať</button>
+</form>

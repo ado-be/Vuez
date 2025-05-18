@@ -1,0 +1,183 @@
+﻿@{
+    ViewData["Title"] = "Protokoly - Capillary";
+}
+
+<div class="paper">
+   <!-- Hlavička -->
+   <div class="header">
+        <div class="logo">
+            <img src="~/images/VUEZlogo.png" alt="VUEZ Logo">
+        </div>
+        <div class="title">
+            <h1>
+                <input type="text" name="testTitle" value="SKÚŠKA TESNOSTI" />
+            </h1>
+            <h2>
+                <input type="text" name="testSubtitle" value="PRETLAKOM A201/1" />
+            </h2>
+        </div>
+        <div class="protocol-info">
+            <table>
+                <tr>
+                    <td><strong>Číslo protokolu SE:</strong></td>
+                    <td><input type="text" name="protocolSE" value="ST-025 / EMO-1B/23" /></td>
+                </tr>
+                <tr>
+                    <td><strong>Číslo protokolu dodávateľa:</strong></td>
+                    <td><input type="text" name="protocolSupplier" value="" /></td>
+                </tr>
+                <tr>
+                    <td><strong>List číslo:</strong></td>
+                    <td><input type="text" name="pageNumber" value="1" /></td>
+                </tr>
+                <tr>
+                    <td><strong>Počet listov:</strong></td>
+                    <td><input type="text" name="totalPages" value="1" /></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- Sekcia detailov -->
+    <div class="details-section">
+        <table>
+            <tr>
+                <td><strong>2. Kontrolované zariadenie/miesto:</strong></td>
+                <td><input type="text" name="controlPlace" placeholder="Doplnenie tlakových nástavcov v A201/1"></td>
+            </tr>
+            <tr>
+                <td><strong>3. SEZ:</strong></td>
+                <td><input type="text" name="sez" placeholder=""></td>
+                <td><strong>4. Vybrané zariadenie, BT:</strong></td>
+                <td><input type="text" name="btDevice" placeholder="2"></td>
+            </tr>
+            <tr>
+                <td><strong>5. Výrobné číslo:</strong></td>
+                <td><input type="text" name="serialNumber" placeholder=""></td>
+                <td><strong>6. Rok výroby:</strong></td>
+                <td><input type="text" name="yearOfProduction" placeholder=""></td>
+            </tr>
+            <tr>
+                <td><strong>8. Číslo kroku:</strong></td>
+                <td><input type="text" name="stepNumber" placeholder=""></td>
+                <td><strong>9. P.L KVZ:</strong></td>
+                <td><input type="text" name="plKvz" placeholder=""></td>
+            </tr>
+            <tr>
+                <td><strong>11. Zákazkové číslo:</strong></td>
+                <td><input type="text" name="customerNumber" placeholder="60906697"></td>
+                <td><strong>15. Staveb:</strong></td>
+                <td><input type="text" name="building" placeholder="EMO"></td>
+            </tr>
+            <tr>
+                <td><strong>17. Objekt:</strong></td>
+                <td><input type="text" name="object" placeholder="800/1"></td>
+                <td><strong>18. Podlažie:</strong></td>
+                <td><input type="text" name="floor" placeholder="+6,00 m"></td>
+            </tr>
+            <tr>
+                <td><strong>16. Blok:</strong></td>
+                <td><input type="text" name="block" placeholder="1. Blok"></td>
+                <td><strong>19. Miestnosť:</strong></td>
+                <td><input type="text" name="room" placeholder="A201/1"></td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Sekcia organizácie a objednávateľa -->
+    <div class="organization-section">
+        <table>
+            <tr>
+                <td><strong>20. Výrobca:</strong></td>
+                <td><input type="text" name="manufacturer" placeholder="-" /></td>
+            </tr>
+            <tr>
+                <td><strong>21. Montážna organizácia:</strong></td>
+                <td><input type="text" name="assemblyOrg" placeholder="VÚEZ, a.s., Levice" /></td>
+            </tr>
+            <tr>
+                <td><strong>22. Objednávateľ:</strong></td>
+                <td><input type="text" name="customer" placeholder="SE, a.s." /></td>
+            </tr>
+            <tr>
+                <td><strong>23. Firmy dodávateľ:</strong></td>
+                <td><input type="text" name="supplier" placeholder="VÚEZ, a.s., Levice" /></td>
+            </tr>
+            <tr>
+                <td><strong>24. Kontrola podľa:</strong></td>
+                <td><input type="text" name="control" placeholder="" /></td>
+            </tr>
+            <tr>
+                <td><strong>25. Vyhodnotenie podľa:</strong></td>
+                <td><input type="text" name="evaluation" placeholder="" /></td>
+            </tr>
+            <tr>
+                <td><strong>26. STD:</strong></td>
+                <td><input type="text" name="std" placeholder="" /></td>
+            </tr>
+        </table>
+    </div>
+
+
+     <div class="equipment-section">
+        <h3>27. Použité prístroje, meradlá a prípravky:</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Názov</th>
+                    <th>Typ</th>
+                    <th>Výrobca</th>
+                    <th>Výrobné číslo</th>
+                    <th>Evidenčné číslo</th>
+                    <th>Číslo kalibračného overovacieho listu</th>
+                    <th>Platnosť kalibrácie do</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Manometer</td>
+                    <td>700G06</td>
+                    <td>FLUKE</td>
+                    <td>4120562</td>
+                    <td>-</td>
+                    <td>AKL-2-0394/22</td>
+                    <td>04.03.2025</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="results-section">
+    <h3>28. Predložená dokumentácia:</h3>
+    <p>-</p>
+
+    <h3>29. Popis kontroly a zistený stav:</h3>
+    <p>
+        Bola vykonaná pretlaková skúška tesnosti bublinkovou metódou, pomocou penotvorného roztoku na 
+        ZS č.: M6014; M6015; M6016; M6017; M6018; M6019; M6020; M6021; M6022; M6023; M6024; M6025; M6026.
+    </p>
+    <p>
+        Skúšobné médium: <strong>VZDUCH</strong><br>
+        Skúšobný pretlak: <strong>150 kPa</strong><br>
+        Kritérium úspešnosti skúšky: <strong>netvorenie bubliniek</strong><br>
+        Výsledok kontroly: <strong>VYHOVUJE</strong>
+    </p>
+
+    <table class="control-summary">
+        <tr>
+            <td><strong>30. Dátum kontroly:</strong></td>
+            <td>18.04.2023</td>
+            <td><strong>31. Výsledok kontroly:</strong></td>
+            <td><strong>VYHOVUJE/PASSED</strong></td>
+        </tr>
+        <tr>
+            <td><strong>32. Celkové hodnotenie:</strong></td>
+            <td><strong>VYHOVUJE/PASSED</strong></td>
+            <td><strong>33. Dátum vystavenia protokolu:</strong></td>
+            <td>18.04.2023</td>
+        </tr>
+    </table>
+</div>
+</div>
+
+</div>
+ 

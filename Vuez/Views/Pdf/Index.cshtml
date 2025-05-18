@@ -1,0 +1,37 @@
+﻿@model IEnumerable<PdfDocument>
+
+<h2>PDF Dokumenty</h2>
+<table class="table">
+   
+
+
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Vybrať PDF:</label>
+            <input type="file" name="file" class="form-control" required />
+        </div>
+        <div class="mt-3">
+            <button type="submit" class="btn btn-primary">Načítať</button>
+         
+        </div>
+    </form>
+    <thead>
+        <tr>
+            <th>Názov</th>
+            <th>Dátum pridania</th>
+            <th>Akcie</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pdf in Model)
+        {
+            <tr>
+                <td>@pdf.Name</td>
+                <td>@pdf.UploadedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                <td>
+                    <a asp-action="Download" asp-route-id="@pdf.Id" class="btn btn-primary">Stiahnuť</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

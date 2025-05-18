@@ -1,35 +1,32 @@
 ﻿@model vuez.Indicators
 
-<h2>Create New Indicator</h2>
+<h2>Pridať nové meradlo</h2>
 
 <form asp-action="Create">
     <div class="form-group">
-        <label asp-for="Name"></label>
+        <label asp-for="Name">Názov</label>
         <input asp-for="Name" class="form-control" />
         <span asp-validation-for="Name" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="Type"></label>
+        <label asp-for="Type">Typ</label>
         <input asp-for="Type" class="form-control" />
         <span asp-validation-for="Type" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="Producer"></label>
+        <label asp-for="Producer">Výrobca</label>
         <input asp-for="Producer" class="form-control" />
-        <span asp-validation-for="Type" class="text-danger"></span>
+        <span asp-validation-for="Producer" class="text-danger"></span>
     </div>
-
     <div class="form-group">
-        <label asp-for="List_Num"></label>
+        <label asp-for="List_Num">Číslo evidencie</label>
         <input asp-for="List_Num" class="form-control" />
         <span asp-validation-for="List_Num" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Create</button>
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    <button type="submit" class="btn btn-primary">Pridať</button>
+    <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
 </form>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
+    @await Html.PartialAsync("_ValidationScriptsPartial")
 }

@@ -1,0 +1,106 @@
+﻿@model vuez.Models.VstupnaKontrola
+<h1>Úprava protokolu</h1>
+<div class="protocol-container">
+    <!-- Hlavička dokumentu -->
+    <table class="header-table">
+        <tr>
+            <td class="logo">
+                <img src="~/images/VUEZlogo.png" alt="VUEZ Logo" class="logo-img" />
+            </td>
+            <td class="company-name">
+                <h3>V U E Z, a.s.</h3>
+            </td>
+            <td class="protocol-number">
+                <strong>Číslo protokolu:</strong>
+                <input asp-for="CisloProtokolu" class="protocol-input" readonly />
+            </td>
+
+        </tr>
+    </table>
+
+    <!-- Názov protokolu -->
+    <h2 class="protocol-title">PROTOKOL: VSTUPNÁ TECHNICKÁ KONTROLA</h2>
+
+    <form asp-action="Create" method="post">
+        <!-- Hlavná tabuľka formulára -->
+        <table class="form-table">
+            <tr>
+                <td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td>
+                <td><input asp-for="NazovVyrobku" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Dodavatel">Dodávateľ:</label></td>
+                <td><input asp-for="Dodavatel" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td>
+                <td><input asp-for="ZakazkoveCislo" class="form-control" required /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="KontrolaPodla">Kontrola vykonaná podľa:</label></td>
+                <td><input asp-for="KontrolaPodla" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="SpravnostDodavky">Správnosť a kompletnosť zariadenia / dodávky:</label></td>
+                <td><input asp-for="SpravnostDodavky" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="ZnacenieMaterialu">Značenie materiálu:</label></td>
+                <td><input asp-for="ZnacenieMaterialu" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="CistotaPovrchu">Kontrola čistoty povrchu / vzhľadu / funkčnosti:</label></td>
+                <td><input asp-for="CistotaPovrchu" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Balenie">Kontrola balenia a konzervovania:</label></td>
+                <td><input asp-for="Balenie" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Poskodenie">Kontrola mech. poškodení:</label></td>
+                <td><input asp-for="Poskodenie" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="IneKroky">Iné inšpekčné kroky:</label></td>
+                <td><input asp-for="IneKroky" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Poznamky">Poznámky:</label></td>
+                <td><textarea asp-for="Poznamky" class="form-control"></textarea></td>
+            </tr>
+        </table>
+
+        <!-- Podpisy -->
+        <table class="signature-table">
+            <tr>
+            <tr>
+                <td><label asp-for="Miesto">Miesto:</label></td>
+                <td><input asp-for="Miesto" class="form-control" /></td>
+            </tr>
+            <tr>
+                <td><label asp-for="Datum">Dátum:</label></td>
+                <td><input asp-for="Datum" class="form-control" /></td>
+            </tr>
+            <td></td>
+            </tr>
+            <tr>
+                <td>.......................................................</td>
+                <td>.......................................................</td>
+                <td>.......................................................</td>
+            </tr>
+            <tr>
+                <td>podpis vedúceho prác</td>
+                <td>podpis projekt - manažéra</td>
+                <td>pečiatka a podpis pracovníka TK</td>
+            </tr>
+        </table>
+
+        <!-- Uložiť tlačidlo -->
+        <div class="submit-container">
+            <button type="submit" class="btn btn-primary">Uložiť</button>
+            <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
+        </div>
+    </form>
+</div>
+
+
