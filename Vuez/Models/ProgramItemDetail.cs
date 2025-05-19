@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; // <- PRIDAJ
 
 namespace vuez.Models
 {
@@ -36,12 +37,10 @@ namespace vuez.Models
 
         public string? Notes { get; set; }
 
-        // Navigačné vlastnosti
-
+        // ✅ DÔLEŽITÉ: Validáciu tejto navigačnej property vypneme
         [ForeignKey("ItemId")]
+        [ValidateNever]
         public virtual ProgramItem Item { get; set; } = null!;
-
-       // public virtual ProgramRelease? ProgramRelease { get; set; }
 
         public virtual ICollection<DistributionList> DistributionLists { get; set; } = new List<DistributionList>();
         public virtual ICollection<PlannedTest> PlannedTests { get; set; } = new List<PlannedTest>();

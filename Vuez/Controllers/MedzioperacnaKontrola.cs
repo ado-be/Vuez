@@ -170,87 +170,51 @@ namespace vuez.Controllers
                 .Include(p => p.Config)
                 .ToListAsync();
 
-            if (index == null)
-            {
-                // Vytvorím ProgramItemConfigViewModel namiesto ConfigurationConfigListViewModel
-                var item = items.FirstOrDefault();
-                var detail = item != null
-                    ? await _context.ProgramItemDetails
-                        // Odstránime Include(d => d.ProgramRelease)
-                        .FirstOrDefaultAsync(d => d.ItemId == item.ItemId)
-                    : null;
-
-                if (detail == null && item != null)
-                {
-                    detail = new ProgramItemDetail
-                    {
-                        ItemId = item.ItemId,
-                        Ppname = item.ItemName,
-                        Ppnumber = item.ItemCode,
-                        RelatedDocumentation = sheet.RelatedDocumentation,
-                        Connections = sheet.RelatedHwsw
-                    };
-                }
-
-                // Odstránime referenciu na ProgramRelease
-                // var release = detail?.ProgramRelease ?? new ProgramRelease { Detail = detail };
-
-                var summaryModel = new ProgramItemConfigViewModel
-                {
-                    Item = item,
-                    Detail = detail,
-                    // Odstránime Release = release,
-
-                    // Pridám zoznam položiek a konfiguračný list pre prehľad
-                    AllItems = items,
-                    ConfigurationSheet = sheet
-                };
-
-                return View("Configlist", summaryModel);
-            }
-
-            if (!items.Any() || index >= items.Count)
+            if (!items.Any())
                 return RedirectToAction("ExamRecord", new { configId });
 
-            var selectedItem = await _context.ProgramItems
-                .Include(p => p.Config)
-                .FirstOrDefaultAsync(p => p.ItemId == items[index.Value].ItemId);
+            var item = index.HasValue ? items.ElementAtOrDefault(index.Value) : items.FirstOrDefault();
+            if (item == null)
+                return RedirectToAction("ExamRecord", new { configId });
 
-            if (selectedItem == null)
-                return NotFound();
+            // Načítanie existujúceho detailu
+            var detail = await _context.ProgramItemDetails
+                .FirstOrDefaultAsync(d => d.ItemId == item.ItemId);
 
-            var selectedDetail = await _context.ProgramItemDetails
-                // Odstránime Include(d => d.ProgramRelease)
-                .FirstOrDefaultAsync(d => d.ItemId == selectedItem.ItemId);
-
-            if (selectedDetail == null)
+            // Príprava detailu (bez ukladania!)
+            if (detail == null)
             {
-                selectedDetail = new ProgramItemDetail
+                detail = new ProgramItemDetail
                 {
-                    ItemId = selectedItem.ItemId,
-                    Ppname = selectedItem.ItemName,
-                    Ppnumber = selectedItem.ItemCode,
+                    ItemId = item.ItemId,
+                    Ppname = item.ItemName,
+                    Ppnumber = item.ItemCode,
                     RelatedDocumentation = sheet.RelatedDocumentation,
-                    Connections = sheet.RelatedHwsw
+                    Connections = sheet.RelatedHwsw,
+                    ModifiedBy = sheet.Processor
+                    // NEukladáme – dáta vyplní používateľ vo formulári
                 };
-            }
 
-            // Odstránime referenciu na ProgramRelease
-            // var selectedRelease = selectedDetail.ProgramRelease ?? new ProgramRelease { Detail = selectedDetail };
+                System.Diagnostics.Debug.WriteLine($"📝 Pripravený nový detail pre ItemId {item.ItemId} (bez uloženia)");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"📥 Načítaný existujúci detail pre ItemId {item.ItemId}");
+            }
 
             var model = new ProgramItemConfigViewModel
             {
-                Item = selectedItem,
-                Detail = selectedDetail,
-                // Odstránime Release = selectedRelease,
-
-                // Pridám zoznam položiek a konfiguračný list pre konzistenciu
+                Item = item,
+                Detail = detail,
                 AllItems = items,
                 ConfigurationSheet = sheet
             };
 
-            return View("ProgramItemForm", model);
+            // View sa vyberá podľa toho, či ideš na prvý alebo konkrétny index
+            return index == null ? View("Configlist", model) : View("ProgramItemForm", model);
         }
+
+
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -356,6 +320,250 @@ namespace vuez.Controllers
                 // Vrátime chybu používateľovi
                 ModelState.AddModelError("", $"Chyba pri ukladaní: {ex.Message}");
                 return View("ProgramItemForm", model);
+            }
+        }
+
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveFormData()
+        {
+            try
+            {
+                // Získání hodnot přímo z formuláře
+                int configId = 0;
+                int.TryParse(Request.Form["configId"], out configId);
+
+                int itemId = 0;
+                int.TryParse(Request.Form["itemId"], out itemId);
+
+                int detailId = 0;
+                int.TryParse(Request.Form["detailId"], out detailId);
+
+                string itemCode = Request.Form["itemCode"];
+                string itemName = Request.Form["itemName"];
+                string itemDescription = Request.Form["itemDescription"];
+
+                string ppname = Request.Form["ppname"];
+                string ppnumber = Request.Form["ppnumber"];
+                string modifiedBy = Request.Form["modifiedBy"];
+                string initialVersionNumber = Request.Form["initialVersionNumber"];
+                string developmentTools = Request.Form["developmentTools"];
+                string developmentPc = Request.Form["developmentPc"];
+                string connections = Request.Form["connections"];
+                string relatedDocumentation = Request.Form["relatedDocumentation"];
+                string notes = Request.Form["notes"];
+
+                // Logování pro diagnostiku
+                System.Diagnostics.Debug.WriteLine($"📄 SaveFormData: Zpracovávám formulář");
+                System.Diagnostics.Debug.WriteLine($"📄 configId: {configId}");
+                System.Diagnostics.Debug.WriteLine($"📄 itemId: {itemId}");
+                System.Diagnostics.Debug.WriteLine($"📄 itemCode: {itemCode}");
+                System.Diagnostics.Debug.WriteLine($"📄 itemName: {itemName}");
+                System.Diagnostics.Debug.WriteLine($"📄 ppname: {ppname}");
+                System.Diagnostics.Debug.WriteLine($"📄 ppnumber: {ppnumber}");
+
+                // Validace nezbytných údajů
+                if (configId <= 0)
+                {
+                    TempData["ErrorMessage"] = "Chybí ID konfiguračního listu.";
+                    return RedirectToAction("Index");
+                }
+
+                if (string.IsNullOrEmpty(itemCode) || string.IsNullOrEmpty(itemName))
+                {
+                    TempData["ErrorMessage"] = "Kód a název položky jsou povinné.";
+                    return RedirectToAction("Configlist", new { configId });
+                }
+
+                // Kontrola existence konfiguračního listu
+                var config = await _context.ConfigurationSheets.FindAsync(configId);
+                if (config == null)
+                {
+                    TempData["ErrorMessage"] = $"Konfigurační list s ID {configId} nebyl nalezen.";
+                    return RedirectToAction("Index");
+                }
+
+                // Uložení nebo aktualizace položky
+                ProgramItem item;
+                if (itemId > 0)
+                {
+                    // Aktualizace existující položky
+                    item = await _context.ProgramItems.FindAsync(itemId);
+                    if (item != null)
+                    {
+                        item.ItemCode = itemCode;
+                        item.ItemName = itemName;
+                        item.ItemDescription = itemDescription;
+                        _context.Entry(item).State = EntityState.Modified;
+                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace položky ID: {itemId}");
+                    }
+                    else
+                    {
+                        // Položka s daným ID nebyla nalezena, vytvoříme novou
+                        item = new ProgramItem
+                        {
+                            ConfigId = configId,
+                            ItemCode = itemCode,
+                            ItemName = itemName,
+                            ItemDescription = itemDescription
+                        };
+                        _context.ProgramItems.Add(item);
+                        System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nové položky (původní ID {itemId} neexistuje)");
+                    }
+                }
+                else
+                {
+                    // Vytvoření nové položky
+                    item = new ProgramItem
+                    {
+                        ConfigId = configId,
+                        ItemCode = itemCode,
+                        ItemName = itemName,
+                        ItemDescription = itemDescription
+                    };
+                    _context.ProgramItems.Add(item);
+                    System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nové položky");
+                }
+
+                // Uložit položku pro získání ID (pokud je nová)
+                if (item.ItemId <= 0)
+                {
+                    await _context.SaveChangesAsync();
+                    itemId = item.ItemId;
+                    System.Diagnostics.Debug.WriteLine($"📝 Nové ItemId: {itemId}");
+                }
+
+                // Uložení nebo aktualizace detailu
+                ProgramItemDetail detail;
+                if (detailId > 0)
+                {
+                    // Aktualizace existujícího detailu
+                    detail = await _context.ProgramItemDetails.FindAsync(detailId);
+                    if (detail != null)
+                    {
+                        detail.Ppname = ppname;
+                        detail.Ppnumber = ppnumber;
+                        detail.ModifiedBy = modifiedBy;
+                        detail.InitialVersionNumber = initialVersionNumber;
+                        detail.DevelopmentTools = developmentTools;
+                        detail.DevelopmentPc = developmentPc;
+                        detail.Connections = connections;
+                        detail.RelatedDocumentation = relatedDocumentation;
+                        detail.Notes = notes;
+                        detail.LastModifiedDate = DateTime.Now;
+                        _context.Entry(detail).State = EntityState.Modified;
+                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu ID: {detailId}");
+                    }
+                    else
+                    {
+                        // Detail s daným ID nebyl nalezen, zkusit najít podle ItemId
+                        detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
+                        if (detail != null)
+                        {
+                            detail.Ppname = ppname;
+                            detail.Ppnumber = ppnumber;
+                            detail.ModifiedBy = modifiedBy;
+                            detail.InitialVersionNumber = initialVersionNumber;
+                            detail.DevelopmentTools = developmentTools;
+                            detail.DevelopmentPc = developmentPc;
+                            detail.Connections = connections;
+                            detail.RelatedDocumentation = relatedDocumentation;
+                            detail.Notes = notes;
+                            detail.LastModifiedDate = DateTime.Now;
+                            _context.Entry(detail).State = EntityState.Modified;
+                            System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu podle ItemId: {itemId}");
+                        }
+                        else
+                        {
+                            // Vytvoření nového detailu
+                            detail = new ProgramItemDetail
+                            {
+                                ItemId = itemId,
+                                Ppname = ppname,
+                                Ppnumber = ppnumber,
+                                ModifiedBy = modifiedBy,
+                                InitialVersionNumber = initialVersionNumber,
+                                DevelopmentTools = developmentTools,
+                                DevelopmentPc = developmentPc,
+                                Connections = connections,
+                                RelatedDocumentation = relatedDocumentation,
+                                Notes = notes,
+                                LastModifiedDate = DateTime.Now
+                            };
+                            _context.ProgramItemDetails.Add(detail);
+                            System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového detailu pro ItemId: {itemId}");
+                        }
+                    }
+                }
+                else
+                {
+                    // Zkusit najít existující detail podle ItemId
+                    detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
+                    if (detail != null)
+                    {
+                        detail.Ppname = ppname;
+                        detail.Ppnumber = ppnumber;
+                        detail.ModifiedBy = modifiedBy;
+                        detail.InitialVersionNumber = initialVersionNumber;
+                        detail.DevelopmentTools = developmentTools;
+                        detail.DevelopmentPc = developmentPc;
+                        detail.Connections = connections;
+                        detail.RelatedDocumentation = relatedDocumentation;
+                        detail.Notes = notes;
+                        detail.LastModifiedDate = DateTime.Now;
+                        _context.Entry(detail).State = EntityState.Modified;
+                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu podle ItemId: {itemId}");
+                    }
+                    else
+                    {
+                        // Vytvoření nového detailu
+                        detail = new ProgramItemDetail
+                        {
+                            ItemId = itemId,
+                            Ppname = ppname,
+                            Ppnumber = ppnumber,
+                            ModifiedBy = modifiedBy,
+                            InitialVersionNumber = initialVersionNumber,
+                            DevelopmentTools = developmentTools,
+                            DevelopmentPc = developmentPc,
+                            Connections = connections,
+                            RelatedDocumentation = relatedDocumentation,
+                            Notes = notes,
+                            LastModifiedDate = DateTime.Now
+                        };
+                        _context.ProgramItemDetails.Add(detail);
+                        System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového detailu pro ItemId: {itemId}");
+                    }
+                }
+
+                // Uložit vše
+                await _context.SaveChangesAsync();
+                System.Diagnostics.Debug.WriteLine("✅ Data úspěšně uložena");
+
+                // Přesměrování na další krok
+                return RedirectToAction("ExamRecord", new { configId });
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ CHYBA: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+
+                TempData["ErrorMessage"] = $"Došlo k chybě při ukládání dat: {ex.Message}";
+
+                // Pokus o získání configId pro návrat zpět
+                int configId = 0;
+                int.TryParse(Request.Form["configId"], out configId);
+
+                if (configId > 0)
+                {
+                    return RedirectToAction("Configlist", new { configId });
+                }
+                else
+                {
+                    return RedirectToAction("Index");
+                }
             }
         }
 

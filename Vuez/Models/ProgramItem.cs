@@ -23,9 +23,10 @@ namespace vuez.Models
         public string? ItemDescription { get; set; }
 
         // 🔧 Oprava: zabránime validácii tejto navigačnej property
+        [ValidateNever]
         public virtual ConfigurationSheet Config { get; set; } = null!;
 
-
+        [ValidateNever]
         public virtual ICollection<ProgramItemDetail> ProgramItemDetails { get; set; } = new List<ProgramItemDetail>();
     }
 }
