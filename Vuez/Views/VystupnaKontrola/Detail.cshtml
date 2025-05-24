@@ -3,7 +3,6 @@
 <h1>Detail protokolu</h1>
 
 <div class="protocol-container">
-    <!-- Hlavička dokumentu -->
     <table class="header-table">
         <tr>
             <td class="logo">
@@ -21,71 +20,59 @@
 
     <h2 class="protocol-title">PROTOKOL: VÝSTUPNÁ TECHNICKÁ KONTROLA</h2>
 
-    <!-- FORM na zobrazenie readonly údajov -->
     <form>
         <table class="form-table">
-            <tr>
-                <td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td>
-                <td><input asp-for="NazovVyrobku" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Objednavatel">Objednávateľ:</label></td>
-                <td><input asp-for="Objednavatel" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td>
-                <td><input asp-for="ZakazkoveCislo" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KontrolaPodla">Kontrola podľa:</label></td>
-                <td><input asp-for="KontrolaPodla" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostTechaVyr">Kompletnosť tech. a výrobných operácií:</label></td>
-                <td><input asp-for="KompletnostTechaVyr" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostKontrolnych">Kompletnosť kontrolných operácií:</label></td>
-                <td><input asp-for="KompletnostKontrolnych" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostSprievodnej">Kompletnosť sprievodnej dokumentácie:</label></td>
-                <td><input asp-for="KompletnostSprievodnej" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Pripravenostkexp">Pripravenosť k expedícii:</label></td>
-                <td><input asp-for="Pripravenostkexp" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Poznamky">Poznámky:</label></td>
-                <td><textarea asp-for="Poznamky" class="form-control" readonly></textarea></td>
-            </tr>
+            <tr><td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td><td><input asp-for="NazovVyrobku" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="Objednavatel">Objednávateľ:</label></td><td><input asp-for="Objednavatel" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td><td><input asp-for="ZakazkoveCislo" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="KontrolaPodla">Kontrola podľa:</label></td><td><input asp-for="KontrolaPodla" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="KompletnostTechaVyr">Kompletnosť tech. a výrobných operácií:</label></td><td><input asp-for="KompletnostTechaVyr" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="KompletnostKontrolnych">Kompletnosť kontrolných operácií:</label></td><td><input asp-for="KompletnostKontrolnych" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="KompletnostSprievodnej">Kompletnosť sprievodnej dokumentácie:</label></td><td><input asp-for="KompletnostSprievodnej" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="Pripravenostkexp">Pripravenosť k expedícii:</label></td><td><input asp-for="Pripravenostkexp" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="Poznamky">Poznámky:</label></td><td><textarea asp-for="Poznamky" class="form-control" readonly></textarea></td></tr>
+            <tr><td><label asp-for="Miesto">Miesto:</label></td><td><input asp-for="Miesto" class="form-control" readonly /></td></tr>
+            <tr><td><label asp-for="Datum">Dátum:</label></td><td><input asp-for="Datum" class="form-control" readonly /></td></tr>
         </table>
 
-        <table class="signature-table">
-            <tr>
-                <td><label asp-for="Miesto">Miesto:</label></td>
-                <td><input asp-for="Miesto" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Datum">Dátum:</label></td>
-                <td><input asp-for="Datum" class="form-control" readonly /></td>
-            </tr>
-            <tr>
-                <td>.......................................................</td>
-                <td>.......................................................</td>
-                <td>.......................................................</td>
-            </tr>
-            <tr>
-                <td>podpis vedúceho prác</td>
-                <td>podpis projekt - manažéra</td>
-                <td>pečiatka a podpis pracovníka TK</td>
-            </tr>
-        </table>
+        <!-- Podpisový blok -->
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-top: 20px;">
+            
 
-        <div class="submit-container">
-           
+            <div style="flex: 1 1 200px; text-align: center;">
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.PodpisManagerUrl))
+                    {
+                        <img src="@Model.PodpisManagerUrl" style="max-height: 100px;" alt="Podpis manažéra" />
+                        <div style="color: green; font-weight: bold;">Podpísané</div>
+                    }
+                    else
+                    {
+                        <div style="color: red;">Chýba podpis</div>
+                    }
+                </div>
+                <div>podpis projekt - manažéra</div>
+            </div>
+
+            <div style="flex: 1 1 200px; text-align: center;">
+                <div>
+                    @if (!string.IsNullOrEmpty(Model.PodpisTechnikUrl))
+                    {
+                        <img src="@Model.PodpisTechnikUrl" style="max-height: 100px;" alt="Podpis technika" />
+                        <div style="color: green; font-weight: bold;">Podpísané</div>
+                    }
+                    else
+                    {
+                        <div style="color: red;">Chýba podpis</div>
+                    }
+                </div>
+                <div>podpis pracovníka TK</div>
+            </div>
+        </div>
+
+        <div class="submit-container mt-4">
             <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Upraviť</a>
+            <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
         </div>
     </form>
 </div>

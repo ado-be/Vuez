@@ -3,7 +3,6 @@
 <h1>Výstupná kontrola</h1>
 
 <div class="protocol-container">
-    <!-- Hlavička dokumentu -->
     <table class="header-table">
         <tr>
             <td class="logo">
@@ -16,86 +15,87 @@
                 <strong>Číslo protokolu:</strong>
                 <input asp-for="CisloProtokolu" class="protocol-input" readonly />
             </td>
-
         </tr>
     </table>
 
-    <!-- Názov protokolu -->
     <h2 class="protocol-title">PROTOKOL: VÝSTUPNÁ TECHNICKÁ KONTROLA</h2>
 
     <form asp-action="Create" method="post">
-        <!-- Hlavná tabuľka formulára -->
         <table class="form-table">
+            <tr><td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td><td><input asp-for="NazovVyrobku" class="form-control" required /></td></tr>
+            <tr><td><label asp-for="Objednavatel">Objednávateľ:</label></td><td><input asp-for="Objednavatel" class="form-control" required /></td></tr>
+            <tr><td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td><td><input asp-for="ZakazkoveCislo" class="form-control" required /></td></tr>
+            <tr><td><label asp-for="KontrolaPodla">Kontrola vykonaná podľa:</label></td><td><input asp-for="KontrolaPodla" class="form-control" /></td></tr>
+            <tr><td><label asp-for="KompletnostTechaVyr">Kompletnosť technoligických a výrobných operácií:</label></td><td><input asp-for="KompletnostTechaVyr" class="form-control" /></td></tr>
+            <tr><td><label asp-for="KompletnostKontrolnych">Kompletnosť kontrolných operácií:</label></td><td><input asp-for="KompletnostKontrolnych" class="form-control" /></td></tr>
+            <tr><td><label asp-for="KompletnostSprievodnej">Kompletnosť sprievodnej technickej dokumentácie:</label></td><td><input asp-for="KompletnostSprievodnej" class="form-control" /></td></tr>
+            <tr><td><label asp-for="Pripravenostkexp">Pripravenosť k expedícii:</label></td><td><input asp-for="Pripravenostkexp" class="form-control" /></td></tr>
+            <tr><td><label asp-for="Poznamky">Poznámky:</label></td><td><textarea asp-for="Poznamky" class="form-control"></textarea></td></tr>
+            <tr><td><label asp-for="Miesto">Miesto:</label></td><td><input asp-for="Miesto" class="form-control" /></td></tr>
+            <tr><td><label asp-for="Datum">Dátum:</label></td><td><input asp-for="Datum" class="form-control" /></td></tr>
+
             <tr>
-                <td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td>
-                <td><input asp-for="NazovVyrobku" class="form-control" required /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Objednavatel">Objednávateľ:</label></td>
-                <td><input asp-for="Objednavatel" class="form-control" required /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td>
-                <td><input asp-for="ZakazkoveCislo" class="form-control" required /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KontrolaPodla">Kontrola vykonaná podľa:</label></td>
-                <td><input asp-for="KontrolaPodla" class="form-control" /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostTechaVyr">Kompletnosť technoligických a výrobných operacií:</label></td>
-                <td><input asp-for="KompletnostTechaVyr" class="form-control" /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostKontrolnych">Kompletnosť kontrolných operacií:</label></td>
-                <td><input asp-for="KompletnostKontrolnych" class="form-control" /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="KompletnostSprievodnej">Kompletnosť sprievodnej technickej dokumentácie:</label></td>
-                <td><input asp-for="KompletnostSprievodnej" class="form-control" /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Pripravenostkexp">Pripravenosť k expedicií:</label></td>
-                <td><input asp-for="Pripravenostkexp" class="form-control" /></td>
-            </tr>
-        
-            <tr>
-                <td><label asp-for="Poznamky">Poznámky:</label></td>
-                <td><textarea asp-for="Poznamky" class="form-control"></textarea></td>
+                <td colspan="2">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+                        <div style="flex: 1 1 200px; text-align: center;">
+                            <div id="podpisPM" style="height: 100px;"></div>
+                            <div class="text-center">podpis projekt - manažéra</div>
+                        </div>
+                        <div style="flex: 1 1 200px; text-align: center;">
+                            <div id="podpisTK" style="height: 100px;"></div>
+                            <div class="text-center">pečiatka a podpis pracovníka TK</div>
+                        </div>
+                    </div>
+                </td>
             </tr>
         </table>
 
-        <!-- Podpisy -->
-        <table class="signature-table">
-            <tr>
-            <tr>
-                <td><label asp-for="Miesto">Miesto:</label></td>
-                <td><input asp-for="Miesto" class="form-control" /></td>
-            </tr>
-            <tr>
-                <td><label asp-for="Datum">Dátum:</label></td>
-                <td><input asp-for="Datum" class="form-control" /></td>
-            </tr>
-                <td></td>
-            </tr>
-            <tr>
-                <td>.......................................................</td>
-                <td>.......................................................</td>
-                <td>.......................................................</td>
-            </tr>
-            <tr>
-                <td>podpis vedúceho prác</td>
-                <td>podpis projekt - manažéra</td>
-                <td>pečiatka a podpis pracovníka TK</td>
-            </tr>
-        </table>
+      
+
+        <!-- Skryté inputy -->
+        <input type="hidden" asp-for="PodpisManagerUrl" id="PodpisManagerUrl" />
+        <input type="hidden" asp-for="PodpisTechnikUrl" id="PodpisTechnikUrl" />
+        <input type="hidden" id="podpisUrl" value="@ViewBag.PodpisUrl" />
+
+        <!-- Tlačidlá na podpisy podľa role -->
+        <div class="mt-3">
+        
+            @if (User.IsInRole("Manager"))
+            {
+                <button type="button" class="btn btn-outline-primary mb-2" onclick="podpisManager()">Podpísať ako projekt - manažér</button>
+            }
+            @if (User.IsInRole("Technician"))
+            {
+                <button type="button" class="btn btn-outline-danger mb-2" onclick="podpisTechnik()">Podpísať ako pracovník TK</button>
+            }
+        </div>
 
         <!-- Uložiť tlačidlo -->
-        <div class="submit-container">
+        <div class="submit-container mt-4">
             <button type="submit" class="btn btn-primary">Uložiť</button>
             <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
         </div>
     </form>
 </div>
 
+<script>
+    const podpisUrl = document.getElementById('podpisUrl').value;
 
+    function podpisVeduci() {
+        if (!podpisUrl) return alert("Chýba podpis vedúceho.");
+        document.getElementById('podpisVeduci').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+        document.getElementById('PodpisVeduciUrl').value = podpisUrl;
+    }
+
+    function podpisManager() {
+        if (!podpisUrl) return alert("Chýba podpis manažéra.");
+        document.getElementById('podpisPM').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+        document.getElementById('PodpisManagerUrl').value = podpisUrl;
+    }
+
+    function podpisTechnik() {
+        if (!podpisUrl) return alert("Chýba podpis pracovníka TK.");
+        document.getElementById('podpisTK').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+        document.getElementById('PodpisTechnikUrl').value = podpisUrl;
+    }
+</script>

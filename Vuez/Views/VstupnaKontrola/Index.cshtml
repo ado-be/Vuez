@@ -17,8 +17,30 @@
     <tbody>
         @foreach (var item in Model)
         {
+            var chybaManager = string.IsNullOrEmpty(item.PodpisManagerUrl);
+            var chybaTechnik = string.IsNullOrEmpty(item.PodpisTechnikUrl);
+            var tooltipText = "";
+            if (chybaManager && chybaTechnik)
+            {
+                tooltipText = "Chýba podpis manažéra a technika";
+            }
+            else if (chybaManager)
+            {
+                tooltipText = "Chýba podpis manažéra";
+            }
+            else if (chybaTechnik)
+            {
+                tooltipText = "Chýba podpis technika";
+            }
+
             <tr>
-                <td>@item.Id</td>
+                <td>
+                    @item.Id
+                    @if (chybaManager || chybaTechnik)
+                    {
+                        <span title="@tooltipText" style="color: red; font-weight: bold; margin-left: 5px;">&#9888;</span> <!-- výkričník -->
+                    }
+                </td>
                 <td>@item.NazovVyrobku</td>
                 <td>@item.Dodavatel</td>
                 <td>@item.ZakazkoveCislo</td>
@@ -26,8 +48,6 @@
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-action btn-edit">Upraviť</a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-action btn-delete">Vymazať</a>
                     <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-info btn-action btn-detail">Detail</a>
-
-                  
                 </td>
             </tr>
         }

@@ -68,7 +68,6 @@
                 <td><label asp-for="Poznamky">Poznámky:</label></td>
                 <td><textarea asp-for="Poznamky" class="form-control"></textarea></td>
             </tr>
-
             <tr>
                 <td><label asp-for="Miesto">Miesto:</label></td>
                 <td colspan="3"><input asp-for="Miesto" class="form-control" /></td>
@@ -78,26 +77,27 @@
                 <td colspan="3"><input asp-for="Datum" class="form-control" /></td>
             </tr>
 
-            <!-- Podpisové obrázky -->
             <tr>
-                
-                <td id="podpisPM" style="height: 100px;"></td>
-                <td id="podpisTK" style="height: 100px;"></td>
-            </tr>
-
-            <!-- Popisy -->
-            <tr>
-                
-                <td class="text-center">podpis projekt - manažéra</td>
-                <td class="text-center">pečiatka a podpis pracovníka TK</td>
+                <td colspan="2">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
+                        <div style="flex: 1 1 200px; text-align: center;">
+                            <div id="podpisPM" style="height: 100px;"></div>
+                            <div class="text-center">podpis projekt - manažéra</div>
+                        </div>
+                        <div style="flex: 1 1 200px; text-align: center;">
+                            <div id="podpisTK" style="height: 100px;"></div>
+                            <div class="text-center">pečiatka a podpis pracovníka TK</div>
+                        </div>
+                    </div>
+                </td>
             </tr>
 
         </table>
 
-       
-
-
-       
+        <!-- Skryté inputy pre podpisy -->
+        <input type="hidden" asp-for="PodpisManagerUrl" id="PodpisManagerUrl" />
+        <input type="hidden" asp-for="PodpisTechnikUrl" id="PodpisTechnikUrl" />
+        <input type="hidden" id="podpisUrl" value="@ViewBag.PodpisUrl" />
 
         @* Manažér *@
         @if (User.IsInRole("Manager"))
@@ -111,36 +111,25 @@
             <button type="button" class="btn btn-outline-danger mb-2" onclick="podpisTechnik()">Podpísať ako pracovník TK</button>
         }
 
-
-
-     
-        <input type="hidden" id="podpisUrl" value="@ViewBag.PodpisUrl" />
         <div class="submit-container" style="margin-bottom: 40px; margin-top: 20px; position: relative; clear: both;">
             <button type="submit" class="btn btn-primary" style="display: block; width: 100%; margin-bottom: 10px;">Uložiť</button>
             <a asp-action="Index" class="btn btn-secondary" style="display: block; width: 100%;">Späť na zoznam</a>
         </div>
-
     </form>
-    
 
-</div>
+    <script>
+        const podpisUrl = document.getElementById('podpisUrl').value;
 
+        function podpisManager() {
+            if (!podpisUrl) return alert("Chýba podpis manažéra.");
+            document.getElementById('podpisPM').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+            document.getElementById('PodpisManagerUrl').value = podpisUrl;  // uložiť do hidden inputu
+        }
 
-<script>
-    const podpisUrl = document.getElementById('podpisUrl').value;
+        function podpisTechnik() {
+            if (!podpisUrl) return alert("Chýba podpis pracovníka TK.");
+            document.getElementById('podpisTK').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
+            document.getElementById('PodpisTechnikUrl').value = podpisUrl;  // uložiť do hidden inputu
+        }
+    </script>
 
-    function podpisVeduci() {
-        if (!podpisUrl) return alert("Chýba podpis vedúceho.");
-        document.getElementById('podpisVeduciPrac').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
-    }
-
-    function podpisManager() {
-        if (!podpisUrl) return alert("Chýba podpis manažéra.");
-        document.getElementById('podpisPM').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
-    }
-
-    function podpisTechnik() {
-        if (!podpisUrl) return alert("Chýba podpis pracovníka TK.");
-        document.getElementById('podpisTK').innerHTML = `<img src="${podpisUrl}" style="max-height: 100px;" />`;
-    }
-</script>
