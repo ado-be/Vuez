@@ -239,18 +239,37 @@ namespace vuez.Controllers
                 // PRIDANÉ: Include používateľov pre načítanie podpisov
                 programReview = await _context.ProgramReviews
                     .Include(r => r.ReviewerUser)           // Navigation property pre používateľa
-                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .ThenInclude(u => u.Details)            // Podpis používateľa z UserDetail
                     .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
 
                 programVerification = await _context.ProgramVerifications
-                    .Include(v => v.VerifierUser)           // Navigation property pre používateľa
-                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .Include(v => v.VerifierUser)           // Navigation property pre používateľa  
+                    .ThenInclude(u => u.Details)            // Podpis používateľa z UserDetail
                     .FirstOrDefaultAsync(v => v.DetailId == detail.DetailId);
 
                 programRelease = await _context.ProgramReleases
                     .Include(r => r.ReleasedByUser)         // Navigation property pre používateľa
-                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .ThenInclude(u => u.Details)            // Podpis používateľa z UserDetail
                     .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
+
+                // PRIDANÉ: Nastavenie podpisových URL do objektov pre view
+                if (programReview?.ReviewerUser?.Details?.SignatureImagePath != null)
+                {
+                    // Ak máte property ReviewerSignature v ProgramReview modeli, nastavte ju:
+                    programReview.ReviewerSignature = programReview.ReviewerUser.Details.SignatureImagePath;
+                }
+
+                if (programVerification?.VerifierUser?.Details?.SignatureImagePath != null)
+                {
+                    // Ak máte property ReviewerSignature v ProgramVerification modeli, nastavte ju:
+                    programVerification.ReviewerSignature = programVerification.VerifierUser.Details.SignatureImagePath;
+                }
+
+                if (programRelease?.ReleasedByUser?.Details?.SignatureImagePath != null)
+                {
+                    // Ak máte property ReleaseSignature v ProgramRelease modeli, nastavte ju:
+                    programRelease.ReleaseSignature = programRelease.ReleasedByUser.Details.SignatureImagePath;
+                }
             }
 
             // Príprava detailu (bez ukladania!)
@@ -651,7 +670,7 @@ namespace vuez.Controllers
                         await transaction.CommitAsync();
 
                         System.Diagnostics.Debug.WriteLine("✅ Data úspěšně uložena");
-                        return RedirectToAction("ExamRecord", new { configId });
+                        return RedirectToAction("Index", new { configId });
                     }
                     catch (Exception)
                     {
@@ -693,6 +712,18 @@ namespace vuez.Controllers
                 }
             }
 
+            // PRIDANÉ: Získanie URL podpisu ak je používateľ podpísaný
+            string reviewerSignatureUrl = null;
+            if (reviewerUserId.HasValue)
+            {
+                var user = await _context.Users
+                    .Include(u => u.Details)
+                    .FirstOrDefaultAsync(u => u.Id.ToString() == reviewerUserId.ToString());
+
+                reviewerSignatureUrl = user?.Details?.SignatureImagePath;
+                System.Diagnostics.Debug.WriteLine($"🔍 Získaný podpis pre reviewera: {reviewerSignatureUrl}");
+            }
+
             var review = await _context.ProgramReviews.FirstOrDefaultAsync(r => r.DetailId == detailId);
 
             if (review != null)
@@ -700,11 +731,12 @@ namespace vuez.Controllers
                 review.ReviewForm = reviewForm;
                 review.ReviewResult = reviewResult;
                 review.Reviewer = reviewer;
-                review.ReviewerUserId = reviewerUserId; // Guid?
+                review.ReviewerUserId = reviewerUserId;
+                review.ReviewerSignature = reviewerSignatureUrl; // PRIDANÉ
                 review.ReviewDate = reviewDate;
 
                 _context.Entry(review).State = EntityState.Modified;
-                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}");
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}, Signature: {reviewerSignatureUrl}");
             }
             else if (!string.IsNullOrEmpty(reviewForm) || !string.IsNullOrEmpty(reviewResult) || !string.IsNullOrEmpty(reviewer) || reviewerUserId.HasValue)
             {
@@ -714,12 +746,13 @@ namespace vuez.Controllers
                     ReviewForm = reviewForm,
                     ReviewResult = reviewResult,
                     Reviewer = reviewer,
-                    ReviewerUserId = reviewerUserId, // Guid?
+                    ReviewerUserId = reviewerUserId,
+                    ReviewerSignature = reviewerSignatureUrl, // PRIDANÉ
                     ReviewDate = reviewDate
                 };
 
                 _context.ProgramReviews.Add(newReview);
-                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}");
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}, Signature: {reviewerSignatureUrl}");
             }
         }
 
@@ -734,6 +767,18 @@ namespace vuez.Controllers
                 }
             }
 
+            // PRIDANÉ: Získanie URL podpisu ak je používateľ podpísaný
+            string verifierSignatureUrl = null;
+            if (verifierUserId.HasValue)
+            {
+                var user = await _context.Users
+                    .Include(u => u.Details)
+                    .FirstOrDefaultAsync(u => u.Id.ToString() == verifierUserId.ToString());
+
+                verifierSignatureUrl = user?.Details?.SignatureImagePath;
+                System.Diagnostics.Debug.WriteLine($"🔍 Získaný podpis pre verifier: {verifierSignatureUrl}");
+            }
+
             var verification = await _context.ProgramVerifications.FirstOrDefaultAsync(v => v.DetailId == detailId);
 
             if (verification != null)
@@ -741,11 +786,12 @@ namespace vuez.Controllers
                 verification.ReviewForm = verificationForm;
                 verification.ReviewResult = verificationResult;
                 verification.Reviewer = verifier;
-                verification.VerifierUserId = verifierUserId; // Guid?
+                verification.VerifierUserId = verifierUserId;
+                verification.ReviewerSignature = verifierSignatureUrl; // PRIDANÉ
                 verification.ReviewDate = verificationDate;
 
                 _context.Entry(verification).State = EntityState.Modified;
-                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}");
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}, Signature: {verifierSignatureUrl}");
             }
             else if (!string.IsNullOrEmpty(verificationForm) || !string.IsNullOrEmpty(verificationResult) || !string.IsNullOrEmpty(verifier) || verifierUserId.HasValue)
             {
@@ -755,31 +801,45 @@ namespace vuez.Controllers
                     ReviewForm = verificationForm,
                     ReviewResult = verificationResult,
                     Reviewer = verifier,
-                    VerifierUserId = verifierUserId, // Guid?
+                    VerifierUserId = verifierUserId,
+                    ReviewerSignature = verifierSignatureUrl, // PRIDANÉ
                     ReviewDate = verificationDate
                 };
 
                 _context.ProgramVerifications.Add(newVerification);
-                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}");
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}, Signature: {verifierSignatureUrl}");
             }
         }
 
         private async Task SaveProgramRelease(int detailId, string releasedBy, bool isReleased, Guid? releasedByUserId)
         {
+            // PRIDANÉ: Získanie URL podpisu ak je používateľ podpísaný
+            string releaseSignatureUrl = null;
+            if (releasedByUserId.HasValue)
+            {
+                var user = await _context.Users
+                    .Include(u => u.Details)
+                    .FirstOrDefaultAsync(u => u.Id.ToString() == releasedByUserId.ToString());
+
+                releaseSignatureUrl = user?.Details?.SignatureImagePath;
+                System.Diagnostics.Debug.WriteLine($"🔍 Získaný podpis pre release: {releaseSignatureUrl}");
+            }
+
             var release = await _context.ProgramReleases.FirstOrDefaultAsync(r => r.DetailId == detailId);
 
             if (release != null)
             {
                 release.ReleasedBy = releasedBy;
                 release.IsReleased = isReleased;
-                release.ReleasedByUserId = releasedByUserId; // Guid?
+                release.ReleasedByUserId = releasedByUserId;
+                release.ReleaseSignature = releaseSignatureUrl; // PRIDANÉ
                 if (isReleased)
                 {
                     release.ReleasedDate = DateTime.Now;
                 }
 
                 _context.Entry(release).State = EntityState.Modified;
-                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}");
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}, Signature: {releaseSignatureUrl}");
             }
             else if (!string.IsNullOrEmpty(releasedBy) || releasedByUserId.HasValue || isReleased)
             {
@@ -788,16 +848,329 @@ namespace vuez.Controllers
                     DetailId = detailId,
                     ReleasedBy = releasedBy,
                     IsReleased = isReleased,
-                    ReleasedByUserId = releasedByUserId, // Guid?
+                    ReleasedByUserId = releasedByUserId,
+                    ReleaseSignature = releaseSignatureUrl, // PRIDANÉ
                     ReleasedDate = isReleased ? DateTime.Now : (DateTime?)null
                 };
 
                 _context.ProgramReleases.Add(newRelease);
-                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}");
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}, Signature: {releaseSignatureUrl}");
             }
         }
 
-        
+
+
+        // PRIDAJTE TIETO METÓDY DO VÁŠHO MEDZIOPERACNAKONTRÓLA KONTROLÉRA
+        // (pridajte ich hneď za Delete metódy)
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int configId)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"📝 Načítavam konfiguračný list {configId} pre editáciu");
+
+                // Načítanie konfiguračného listu s položkami
+                var config = await _context.ConfigurationSheets
+                    .Include(c => c.ProgramItems)
+                    .FirstOrDefaultAsync(c => c.ConfigId == configId);
+
+                if (config == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Konfiguračný list {configId} nebol nájdený");
+                    TempData["ErrorMessage"] = $"Konfiguračný list s ID {configId} nebol nájdený.";
+                    return RedirectToAction("Index");
+                }
+
+                // Vytvorenie view modelu s existujúcimi dátami
+                var model = new ConfigurationSheetViewModel
+                {
+                    ConfigurationSheet = config,
+                    ProgramItems = config.ProgramItems?.ToList() ?? new List<ProgramItem>()
+                };
+
+                System.Diagnostics.Debug.WriteLine($"📝 Editácia konfiguračného listu {configId} s {model.ProgramItems.Count} položkami");
+
+                return View("Create", model); // Použijeme rovnaký view ako pre Create
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Chyba pri načítaní pre editáciu: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                TempData["ErrorMessage"] = $"Nastala chyba pri načítaní: {ex.Message}";
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(ConfigurationSheetViewModel model, string action)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"📝 Ukladám editáciu konfiguračného listu ID: {model.ConfigurationSheet?.ConfigId}");
+                System.Diagnostics.Debug.WriteLine($"📝 Akcia: {action}");
+
+                if (model.ProgramItems == null)
+                {
+                    model.ProgramItems = new List<ProgramItem>();
+                }
+
+                // Filtrácia prázdnych položiek
+                var originalCount = model.ProgramItems.Count;
+                model.ProgramItems = model.ProgramItems
+                    .Where(item =>
+                        !string.IsNullOrWhiteSpace(item.ItemCode) &&
+                        !string.IsNullOrWhiteSpace(item.ItemName))
+                    .ToList();
+
+                System.Diagnostics.Debug.WriteLine($"📝 Položky: {originalCount} -> {model.ProgramItems.Count} (po filtrácii)");
+
+                // Odstránenie ModelState chýb pre filtrované položky
+                var keysToRemove = ModelState.Keys
+                    .Where(key => key.StartsWith("ProgramItems["))
+                    .ToList();
+
+                foreach (var key in keysToRemove)
+                    ModelState.Remove(key);
+
+                // Validácia filtrovaných položiek
+                for (int i = 0; i < model.ProgramItems.Count; i++)
+                {
+                    var item = model.ProgramItems[i];
+                    if (string.IsNullOrWhiteSpace(item.ItemCode))
+                        ModelState.AddModelError($"ProgramItems[{i}].ItemCode", "Kód položky je povinný.");
+                    if (string.IsNullOrWhiteSpace(item.ItemName))
+                        ModelState.AddModelError($"ProgramItems[{i}].ItemName", "Názov položky je povinný.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    System.Diagnostics.Debug.WriteLine("❌ Model nie je validný pri editácii");
+                    foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"- {error.ErrorMessage}");
+                    }
+                    return View("Create", model);
+                }
+
+                using (var transaction = await _context.Database.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // 1. Aktualizácia konfiguračného listu
+                        var existingConfig = await _context.ConfigurationSheets.FindAsync(model.ConfigurationSheet.ConfigId);
+                        if (existingConfig == null)
+                        {
+                            TempData["ErrorMessage"] = "Konfiguračný list nebol nájdený.";
+                            return RedirectToAction("Index");
+                        }
+
+                        // Aktualizácia základných údajov
+                        existingConfig.Apvname = model.ConfigurationSheet.Apvname;
+                        existingConfig.Apvnumber = model.ConfigurationSheet.Apvnumber;
+                        existingConfig.ContractNumber = model.ConfigurationSheet.ContractNumber;
+                        existingConfig.OrderNumber = model.ConfigurationSheet.OrderNumber;
+                        existingConfig.Processor = model.ConfigurationSheet.Processor;
+                        existingConfig.RelatedDocumentation = model.ConfigurationSheet.RelatedDocumentation;
+                        existingConfig.RelatedHwsw = model.ConfigurationSheet.RelatedHwsw;
+                     
+
+                        _context.Entry(existingConfig).State = EntityState.Modified;
+                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizovaný konfiguračný list {existingConfig.ConfigId}");
+
+                        // 2. Spracovanie programových položiek
+                        var existingItems = await _context.ProgramItems
+                            .Where(p => p.ConfigId == model.ConfigurationSheet.ConfigId)
+                            .ToListAsync();
+
+                        System.Diagnostics.Debug.WriteLine($"📝 Existujúce položky: {existingItems.Count}");
+
+                        // Odstránenie položiek ktoré už nie sú v modeli (majú ItemId ale nie sú v novom modeli)
+                        var itemsToDelete = existingItems
+                            .Where(existing => !model.ProgramItems.Any(newItem => newItem.ItemId == existing.ItemId && newItem.ItemId > 0))
+                            .ToList();
+
+                        if (itemsToDelete.Any())
+                        {
+                            System.Diagnostics.Debug.WriteLine($"🗑️ Mazanie {itemsToDelete.Count} položiek");
+                            foreach (var itemToDelete in itemsToDelete)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"🗑️ Mažem položku ID: {itemToDelete.ItemId} - {itemToDelete.ItemCode}");
+                            }
+                            _context.ProgramItems.RemoveRange(itemsToDelete);
+                        }
+
+                        // Aktualizácia/pridanie položiek
+                        foreach (var item in model.ProgramItems)
+                        {
+                            item.ConfigId = model.ConfigurationSheet.ConfigId;
+
+                            if (item.ItemId > 0)
+                            {
+                                // Aktualizácia existujúcej položky
+                                var existingItem = existingItems.FirstOrDefault(e => e.ItemId == item.ItemId);
+                                if (existingItem != null)
+                                {
+                                    existingItem.ItemCode = item.ItemCode;
+                                    existingItem.ItemName = item.ItemName;
+                                    existingItem.ItemDescription = item.ItemDescription;
+                                    _context.Entry(existingItem).State = EntityState.Modified;
+                                    System.Diagnostics.Debug.WriteLine($"✏️ Aktualizovaná položka ID: {item.ItemId} - {item.ItemCode}");
+                                }
+                            }
+                            else
+                            {
+                                // Pridanie novej položky
+                                _context.ProgramItems.Add(item);
+                                System.Diagnostics.Debug.WriteLine($"🆕 Pridaná nová položka: {item.ItemCode}");
+                            }
+                        }
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        System.Diagnostics.Debug.WriteLine($"✅ Konfiguračný list {model.ConfigurationSheet.ConfigId} úspešne aktualizovaný");
+                        TempData["SuccessMessage"] = "Konfiguračný list bol úspešne aktualizovaný.";
+
+                        // Presmerovanie podľa akcie
+                        if (action == "save")
+                        {
+                            return RedirectToAction("Edit", new { configId = model.ConfigurationSheet.ConfigId });
+                        }
+                        else // action == "continue"
+                        {
+                            return RedirectToAction("Configlist", new { configId = model.ConfigurationSheet.ConfigId });
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ CHYBA pri editácii: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                TempData["ErrorMessage"] = $"Nastala chyba pri ukladaní: {ex.Message}";
+                ModelState.AddModelError("", $"Nastala chyba pri ukladaní: {ex.Message}");
+                return View("Create", model);
+            }
+        }
+
+        // PRIDAJTE TÚTO METÓDU DO VÁŠHO MEDZIOPERACNAKONTRÓLA KONTROLÉRA
+        // (pridajte ju hneď za Edit metódy)
+
+        [HttpGet]
+        public async Task<IActionResult> Detail(int configId)
+        {
+            try
+            {
+                System.Diagnostics.Debug.WriteLine($"👁️ Načítavam detail konfiguračného listu {configId}");
+
+                // Načítanie konfiguračného listu s položkami a všetkými súvisiacimi dátami
+                var config = await _context.ConfigurationSheets
+                    .Include(c => c.ProgramItems)
+                    .FirstOrDefaultAsync(c => c.ConfigId == configId);
+
+                if (config == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Konfiguračný list {configId} nebol nájdený");
+                    TempData["ErrorMessage"] = $"Konfiguračný list s ID {configId} nebol nájdený.";
+                    return RedirectToAction("Index");
+                }
+
+                // Načítanie detailov pre všetky programové položky
+                var programItemDetails = new List<ProgramItemDetail>();
+                var programReviews = new List<ProgramReview>();
+                var programVerifications = new List<ProgramVerification>();
+                var programReleases = new List<ProgramRelease>();
+
+                foreach (var item in config.ProgramItems)
+                {
+                    // Načítanie detailu položky
+                    var detail = await _context.ProgramItemDetails
+                        .FirstOrDefaultAsync(d => d.ItemId == item.ItemId);
+
+                    if (detail != null)
+                    {
+                        programItemDetails.Add(detail);
+
+                        // Načítanie review s podpisom
+                        var review = await _context.ProgramReviews
+                            .Include(r => r.ReviewerUser)
+                            .ThenInclude(u => u.Details)
+                            .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
+
+                        if (review != null)
+                        {
+                            // Nastavenie podpisu
+                            if (review.ReviewerUser?.Details?.SignatureImagePath != null)
+                            {
+                                review.ReviewerSignature = review.ReviewerUser.Details.SignatureImagePath;
+                            }
+                            programReviews.Add(review);
+                        }
+
+                        // Načítanie verification s podpisom
+                        var verification = await _context.ProgramVerifications
+                            .Include(v => v.VerifierUser)
+                            .ThenInclude(u => u.Details)
+                            .FirstOrDefaultAsync(v => v.DetailId == detail.DetailId);
+
+                        if (verification != null)
+                        {
+                            // Nastavenie podpisu
+                            if (verification.VerifierUser?.Details?.SignatureImagePath != null)
+                            {
+                                verification.ReviewerSignature = verification.VerifierUser.Details.SignatureImagePath;
+                            }
+                            programVerifications.Add(verification);
+                        }
+
+                        // Načítanie release s podpisom
+                        var release = await _context.ProgramReleases
+                            .Include(r => r.ReleasedByUser)
+                            .ThenInclude(u => u.Details)
+                            .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
+
+                        if (release != null)
+                        {
+                            // Nastavenie podpisu
+                            if (release.ReleasedByUser?.Details?.SignatureImagePath != null)
+                            {
+                                release.ReleaseSignature = release.ReleasedByUser.Details.SignatureImagePath;
+                            }
+                            programReleases.Add(release);
+                        }
+                    }
+                }
+
+                // Vytvorenie detail view modelu
+                var model = new ConfigurationSheetDetailViewModel
+                {
+                    ConfigurationSheet = config,
+                    ProgramItems = config.ProgramItems?.ToList() ?? new List<ProgramItem>(),
+                    ProgramItemDetails = programItemDetails,
+                    ProgramReviews = programReviews,
+                    ProgramVerifications = programVerifications,
+                    ProgramReleases = programReleases
+                };
+
+                System.Diagnostics.Debug.WriteLine($"👁️ Detail konfiguračného listu {configId} načítaný s {model.ProgramItems.Count} položkami");
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Chyba pri načítaní detailu: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+                TempData["ErrorMessage"] = $"Nastala chyba pri načítaní detailu: {ex.Message}";
+                return RedirectToAction("Index");
+            }
+        }
 
 
         [HttpGet]

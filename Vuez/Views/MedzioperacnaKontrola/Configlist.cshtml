@@ -166,9 +166,13 @@
                         <label>Podpis:</label>
                         <div class="signature-container">
                             <div id="reviewSignatureDisplay" class="signature-display">
-                                @if (!string.IsNullOrEmpty(Model?.ProgramReview?.ReviewerSignature))
+                                @if (!string.IsNullOrEmpty(ViewBag.ReviewerSignatureUrl as string))
                                 {
-                                    <img src="@Model.ProgramReview.ReviewerSignature" class="signature-img" alt="Podpis" />
+                                    <img src="@ViewBag.ReviewerSignatureUrl" class="signature-img" alt="Podpis" />
+                                }
+                                else if (Model?.ProgramReview?.ReviewerUserId != null)
+                                {
+                                    <span class="text-success">✓ Podpísané</span>
                                 }
                             </div>
                             <input type="hidden" id="reviewerSignature" name="reviewerSignature"
@@ -336,8 +340,7 @@
         }
 
         <div class="form-group mt-3">
-            <button type="submit" class="btn btn-success">Uložiť zmeny</button>
-            <a href="/MedzioperacnaKontrola/ExamRecord?configId=@configId" class="btn btn-primary">Pokračovať na záznam o kontrole</a>
+            <button type="submit" class="btn btn-success">Uložiť</button>
         </div>
     </div>
 </form>

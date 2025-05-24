@@ -1,0 +1,436 @@
+﻿@model vuez.Models.ViewModels.ConfigurationSheetDetailViewModel
+
+@{
+    ViewData["Title"] = "Detail konfiguračného listu";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="fas fa-eye text-info"></i> Detail konfiguračného listu
+        </h1>
+        <div>
+           
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Späť na zoznam
+            </a>
+        </div>
+    </div>
+
+    <!-- Základné informácie -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-info-circle"></i> Základné informácie APV
+            </h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Názov APV:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.Apvname ?? "-")
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Číslo APV:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.Apvnumber ?? "-")
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Číslo zmluvy:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.ContractNumber ?? "-")
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Zákazkové číslo:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.OrderNumber ?? "-")
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Spracovateľ:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.Processor ?? "-")
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Dátum vytvorenia:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.CreatedDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Súvisiace HW a SW:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.RelatedHwsw ?? "-")
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Súvisiaca dokumentácia:</label>
+                        <div class="form-control-plaintext border rounded p-2 bg-light">
+                            @(Model.ConfigurationSheet.RelatedDocumentation ?? "-")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Programové položky -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">
+                <i class="fas fa-list"></i> Programové položky (@Model.ProgramItems.Count)
+            </h4>
+        </div>
+        <div class="card-body">
+            @if (Model.ProgramItems.Any())
+            {
+                <div class="accordion" id="programItemsAccordion">
+                    @for (int i = 0; i < Model.ProgramItems.Count; i++)
+                    {
+                        var item = Model.ProgramItems[i];
+                        var detail = Model.GetDetailForItem(item.ItemId);
+                        var review = detail != null ? Model.GetReviewForDetail(detail.DetailId) : null;
+                        var verification = detail != null ? Model.GetVerificationForDetail(detail.DetailId) : null;
+                        var release = detail != null ? Model.GetReleaseForDetail(detail.DetailId) : null;
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading@(i)">
+                                <button class="accordion-button @(i > 0 ? "collapsed" : "")" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#collapse@(i)"
+                                        aria-expanded="@(i == 0 ? "true" : "false")" aria-controls="collapse@(i)">
+                                    <div class="d-flex justify-content-between w-100 me-3">
+                                        <span>
+                                            <strong>@item.ItemCode</strong> - @item.ItemName
+                                        </span>
+                                        <div class="badge-container">
+                                            @if (review?.ReviewerUserId != null)
+                                            {
+                                                <span class="badge bg-success me-1">
+                                                    <i class="fas fa-check"></i> Preskúmané
+                                                </span>
+                                            }
+                                            @if (verification?.VerifierUserId != null)
+                                            {
+                                                <span class="badge bg-info me-1">
+                                                    <i class="fas fa-check-double"></i> Overené
+                                                </span>
+                                            }
+                                            @if (release?.ReleasedByUserId != null)
+                                            {
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-rocket"></i> Uvoľnené
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                </button>
+                            </h2>
+                            <div id="collapse@(i)" class="accordion-collapse collapse @(i == 0 ? "show" : "")"
+                                 aria-labelledby="heading@(i)" data-bs-parent="#programItemsAccordion">
+                                <div class="accordion-body">
+
+                                    <!-- Základné údaje položky -->
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Kód položky:</label>
+                                            <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                @item.ItemCode
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Názov položky:</label>
+                                            <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                @item.ItemName
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label fw-bold">Popis:</label>
+                                            <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                @(item.ItemDescription ?? "-")
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (detail != null)
+                                    {
+                                        <!-- Detail programovej položky -->
+                                        <h5 class="border-bottom pb-2 mb-3">
+                                            <i class="fas fa-cogs"></i> Detail konfigurácie
+                                        </h5>
+
+                                        <div class="row mb-4">
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Spracovateľ:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.ModifiedBy ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Číslo počiatočnej verzie:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.InitialVersionNumber ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Vývojové nástroje:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.DevelopmentTools ?? "-")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Vývojové PC:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.DevelopmentPc ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Pripojenia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.Connections ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Súvisiaca dokumentácia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(detail.RelatedDocumentation ?? "-")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(detail.Notes))
+                                        {
+                                            <div class="mb-4">
+                                                <label class="form-label fw-bold">Poznámky:</label>
+                                                <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                    @detail.Notes
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <!-- Preskúmanie -->
+                                        @if (review != null)
+                                        {
+                                            <h5 class="border-bottom pb-2 mb-3 text-success">
+                                                <i class="fas fa-search"></i> Záverečné preskúmanie návrhu PP
+                                            </h5>
+
+                                            <div class="row mb-4">
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label fw-bold">Forma preskúmania:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(review.ReviewForm ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label fw-bold">Výsledok preskúmania:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light" style="min-height: 100px;">
+                                                        @(review.ReviewResult ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Preskúmal:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(review.Reviewer ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Podpis:</label>
+                                                    <div class="signature-display border rounded p-2 bg-light text-center">
+                                                        @if (!string.IsNullOrEmpty(review.ReviewerSignature))
+                                                        {
+                                                            <img src="@review.ReviewerSignature" class="signature-img" alt="Podpis reviewera" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Bez podpisu</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Dátum:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(review.ReviewDate?.ToString("dd.MM.yyyy") ?? "-")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <!-- Overenie -->
+                                        @if (verification != null)
+                                        {
+                                            <h5 class="border-bottom pb-2 mb-3 text-info">
+                                                <i class="fas fa-check-double"></i> Záverečné overenie návrhu PP
+                                            </h5>
+
+                                            <div class="row mb-4">
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label fw-bold">Forma overenia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(verification.ReviewForm ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-12 mb-3">
+                                                    <label class="form-label fw-bold">Výsledok overenia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light" style="min-height: 100px;">
+                                                        @(verification.ReviewResult ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Preskúmal:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(verification.Reviewer ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Podpis:</label>
+                                                    <div class="signature-display border rounded p-2 bg-light text-center">
+                                                        @if (!string.IsNullOrEmpty(verification.ReviewerSignature))
+                                                        {
+                                                            <img src="@verification.ReviewerSignature" class="signature-img" alt="Podpis verifikátora" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Bez podpisu</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Dátum:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(verification.ReviewDate?.ToString("dd.MM.yyyy") ?? "-")
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+
+                                        <!-- Uvoľnenie -->
+                                        @if (release != null)
+                                        {
+                                            <h5 class="border-bottom pb-2 mb-3 text-warning">
+                                                <i class="fas fa-rocket"></i> Uvoľnenie PP
+                                            </h5>
+
+                                            <div class="row mb-4">
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Uvoľnil:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @(release.ReleasedBy ?? "-")
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Stav uvoľnenia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @if (release.IsReleased)
+                                                        {
+                                                            <span class="badge bg-success">
+                                                                <i class="fas fa-check"></i> Áno
+                                                            </span>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="badge bg-secondary">
+                                                                <i class="fas fa-times"></i> Nie
+                                                            </span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold">Podpis:</label>
+                                                    <div class="signature-display border rounded p-2 bg-light text-center">
+                                                        @if (!string.IsNullOrEmpty(release.ReleaseSignature))
+                                                        {
+                                                            <img src="@release.ReleaseSignature" class="signature-img" alt="Podpis uvoľňujúceho" />
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-muted">Bez podpisu</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            @if (release.ReleasedDate.HasValue)
+                                            {
+                                                <div class="mb-3">
+                                                    <label class="form-label fw-bold">Dátum uvoľnenia:</label>
+                                                    <div class="form-control-plaintext border rounded p-2 bg-light">
+                                                        @release.ReleasedDate.Value.ToString("dd.MM.yyyy HH:mm")
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="alert alert-info">
+                                            <i class="fas fa-info-circle"></i>
+                                            Táto programová položka nemá ešte zadaný detail konfigurácie.
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Tento konfiguračný list nemá žiadne programové položky.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Štýly -->
+<style>
+    .signature-display {
+        min-height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .signature-img {
+        max-height: 50px;
+        max-width: 200px;
+    }
+
+    .badge-container {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+
+    .form-control-plaintext {
+        min-height: 38px;
+        display: flex;
+        align-items: center;
+    }
+
+    .card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>

@@ -1,11 +1,30 @@
 ﻿@model vuez.Models.ViewModels.ConfigurationSheetViewModel
 
-<h1>Konfiguračný list aplikačního programového vybavenia APV</h1>
+@{
+    bool isEdit = Model.ConfigurationSheet?.ConfigId > 0;
+    string title = isEdit ? "Editácia konfiguračného listu APV" : "Konfiguračný list aplikačního programového vybavenia APV";
+    string action = isEdit ? "Edit" : "Create";
+}
+
+<h1>@title</h1>
+
+@if (isEdit)
+{
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i> Editujete existujúci konfiguračný list (ID: @Model.ConfigurationSheet.ConfigId)
+    </div>
+}
 
 <!-- Výpis validácií -->
 @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
 
-<form asp-action="Create" method="post" id="createForm">
+<form asp-action="@action" method="post" id="createForm">
+    @if (isEdit)
+    {
+        <!-- Hidden field pre ConfigId pri editácii -->
+        @Html.HiddenFor(m => m.ConfigurationSheet.ConfigId)
+    }
+
     <div class="protocol-container">
         <table class="header-table">
             <tr>
@@ -67,34 +86,86 @@
                     <th>Označenie</th>
                     <th>Názov</th>
                     <th>Poznámka</th>
+                    @if (isEdit)
+                    {
+                        <th>Akcie</th>
+                    }
                 </tr>
             </thead>
             <tbody id="itemTable">
-                @for (int i = 0; i < 3; i++)
+                @if (isEdit && Model.ProgramItems != null && Model.ProgramItems.Any())
                 {
-                    <tr>
-                        <td>
-                            <input name="ProgramItems[@i].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
-                            <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemCode" data-valmsg-replace="true"></span>
-                        </td>
-                        <td>
-                            <input name="ProgramItems[@i].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
-                            <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemName" data-valmsg-replace="true"></span>
-                        </td>
-                        <td>
-                            <input name="ProgramItems[@i].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
-                        </td>
-                    </tr>
+                    @for (int i = 0; i < Model.ProgramItems.Count; i++)
+                    {
+                        <tr data-existing="true">
+                            @if (Model.ProgramItems[i].ItemId > 0)
+                            {
+                                @Html.HiddenFor(m => m.ProgramItems[i].ItemId)
+                            }
+                            <td>
+                                <input name="ProgramItems[@i].ItemCode" value="@Model.ProgramItems[i].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                                <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemCode" data-valmsg-replace="true"></span>
+                            </td>
+                            <td>
+                                <input name="ProgramItems[@i].ItemName" value="@Model.ProgramItems[i].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                                <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemName" data-valmsg-replace="true"></span>
+                            </td>
+                            <td>
+                                <input name="ProgramItems[@i].ItemDescription" value="@Model.ProgramItems[i].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeExistingRow(this)">
+                                    <i class="fas fa-trash"></i> Odstrániť
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <tr>
+                            <td>
+                                <input name="ProgramItems[@i].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                                <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemCode" data-valmsg-replace="true"></span>
+                            </td>
+                            <td>
+                                <input name="ProgramItems[@i].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                                <span class="text-danger" data-valmsg-for="ProgramItems[@i].ItemName" data-valmsg-replace="true"></span>
+                            </td>
+                            <td>
+                                <input name="ProgramItems[@i].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
 
+        @if (isEdit)
+        {
+            <div class="mb-3">
+                <button type="button" class="btn btn-outline-primary" onclick="addNewRowForEdit()">
+                    <i class="fas fa-plus"></i> Pridať novú položku
+                </button>
+            </div>
+        }
+
         <div id="validationErrors" class="alert alert-danger" style="display: none;"></div>
 
         <div class="form-group mt-3">
-            <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
-            <button type="submit" name="action" value="save" class="btn btn-primary">Uložiť</button>
-            <button type="submit" name="action" value="continue" class="btn btn-success">Pokračovať na konfiguračný list</button>
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Späť na zoznam
+            </a>
+
+            <button type="submit" name="action" value="save" class="btn btn-outline-primary">
+                <i class="fas fa-save"></i> @(isEdit ? "Uložiť zmeny" : "Uložiť")
+            </button>
+
+            <button type="submit" name="action" value="continue" class="btn btn-success">
+                <i class="fas fa-arrow-right"></i> @(isEdit ? "Uložiť a pokračovať na konfiguráciu" : "Pokračovať na konfiguračný list")
+            </button>
         </div>
     </div>
 </form>
@@ -102,59 +173,127 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        let rowIndex = 3;
+        const isEditMode = @Json.Serialize(isEdit);
+        let rowIndex = @(Model.ProgramItems?.Count ?? 3);
 
         // Funkcia na overenie, či má riadok vyplnené hodnoty
         function isRowFilled(row) {
-            const inputs = row.querySelectorAll('input');
+            const inputs = row.querySelectorAll('input[type="text"], input:not([type="hidden"])');
             return [...inputs].some(input => input.value.trim() !== "");
         }
 
         // Funkcia na overenie, či je riadok prázdny
         function isRowEmpty(row) {
-            const inputs = row.querySelectorAll('input');
+            const inputs = row.querySelectorAll('input[type="text"], input:not([type="hidden"])');
             return [...inputs].every(input => input.value.trim() === "");
         }
 
-        // Funkcia na pridanie nového riadku do tabuľky
+        // Funkcia na pridanie nového riadku do tabuľky (pre Create mode)
         function addNewRow() {
             const table = document.getElementById("itemTable");
             const newRow = document.createElement("tr");
             newRow.innerHTML = `
-                <td>
-                    <input name="ProgramItems[${rowIndex}].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
-                    <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemCode" data-valmsg-replace="true"></span>
-                </td>
-                <td>
-                    <input name="ProgramItems[${rowIndex}].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
-                    <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemName" data-valmsg-replace="true"></span>
-                </td>
-                <td>
-                    <input name="ProgramItems[${rowIndex}].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
-                </td>`;
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemCode" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemName" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                        </td>`;
             table.appendChild(newRow);
             rowIndex++;
-            
+
             // Pridáme event listenery pre nový riadok
             setupRowEventListeners(newRow);
+        }
+
+        // Funkcia na pridanie nového riadku pre Edit mode
+        function addNewRowForEdit() {
+            const table = document.getElementById("itemTable");
+            const newRow = document.createElement("tr");
+            newRow.innerHTML = `
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemCode" class="form-control item-code" placeholder="Zadajte kód položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemCode" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemName" class="form-control item-name" placeholder="Zadajte názov položky" />
+                            <span class="text-danger" data-valmsg-for="ProgramItems[${rowIndex}].ItemName" data-valmsg-replace="true"></span>
+                        </td>
+                        <td>
+                            <input name="ProgramItems[${rowIndex}].ItemDescription" class="form-control item-desc" placeholder="Voliteľný popis" />
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeExistingRow(this)">
+                                <i class="fas fa-trash"></i> Odstrániť
+                            </button>
+                        </td>`;
+            table.appendChild(newRow);
+            rowIndex++;
+
+            // Pridáme event listenery pre nový riadok
+            setupRowEventListeners(newRow);
+        }
+
+        // Funkcia na odstránenie existujúceho riadku (pre Edit mode)
+        function removeExistingRow(button) {
+            if (confirm('Naozaj chcete odstrániť túto položku?')) {
+                const row = button.closest('tr');
+                row.remove();
+                reindexRows();
+            }
+        }
+
+        // Preindexovanie riadkov po odstránení
+        function reindexRows() {
+            const table = document.getElementById("itemTable");
+            const rows = table.getElementsByTagName("tr");
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const inputs = row.querySelectorAll('input');
+
+                inputs.forEach(input => {
+                    if (input.name) {
+                        // Aktualizujeme názvy inputov
+                        input.name = input.name.replace(/ProgramItems\[\d+\]/, `ProgramItems[${i}]`);
+                    }
+
+                    // Aktualizujeme validačné atribúty
+                    const valmsgFor = input.nextElementSibling;
+                    if (valmsgFor && valmsgFor.hasAttribute('data-valmsg-for')) {
+                        valmsgFor.setAttribute('data-valmsg-for', `ProgramItems[${i}].${input.name.split('.').pop()}`);
+                    }
+                });
+            }
+
+            rowIndex = rows.length;
         }
 
         // Nastavenie event listenerov pre riadok
         function setupRowEventListeners(row) {
             const codeInput = row.querySelector('.item-code');
             const nameInput = row.querySelector('.item-name');
-            
+
             if (codeInput) {
-                codeInput.addEventListener('input', function() {
+                codeInput.addEventListener('input', function () {
                     validateRow(row);
-                    checkLastRowAndAddNewIfNeeded();
+                    if (!isEditMode) {
+                        checkLastRowAndAddNewIfNeeded();
+                    }
                 });
             }
-            
+
             if (nameInput) {
-                nameInput.addEventListener('input', function() {
+                nameInput.addEventListener('input', function () {
                     validateRow(row);
-                    checkLastRowAndAddNewIfNeeded();
+                    if (!isEditMode) {
+                        checkLastRowAndAddNewIfNeeded();
+                    }
                 });
             }
         }
@@ -165,56 +304,58 @@
             const nameInput = row.querySelector('.item-name');
             const codeErrorSpan = row.querySelector('span[data-valmsg-for$="].ItemCode"]');
             const nameErrorSpan = row.querySelector('span[data-valmsg-for$="].ItemName"]');
-            
+
             // Resetujeme validáciu
             if (codeInput) {
                 codeInput.classList.remove('is-invalid');
                 if (codeErrorSpan) codeErrorSpan.textContent = "";
             }
-            
+
             if (nameInput) {
                 nameInput.classList.remove('is-invalid');
                 if (nameErrorSpan) nameErrorSpan.textContent = "";
             }
-            
+
             // Ak je riadok prázdny, nie je potrebné validovať
             if (isRowEmpty(row)) return true;
-            
+
             let isValid = true;
-            
+
             // Ak je vyplnený kód alebo názov, musia byť vyplnené obe hodnoty
             if (codeInput && nameInput) {
                 const hasCode = codeInput.value.trim() !== "";
                 const hasName = nameInput.value.trim() !== "";
-                
+
                 if (hasCode && !hasName) {
                     nameInput.classList.add('is-invalid');
                     if (nameErrorSpan) nameErrorSpan.textContent = "Názov položky je povinný, ak je vyplnený kód.";
                     isValid = false;
                 }
-                
+
                 if (!hasCode && hasName) {
                     codeInput.classList.add('is-invalid');
                     if (codeErrorSpan) codeErrorSpan.textContent = "Kód položky je povinný, ak je vyplnený názov.";
                     isValid = false;
                 }
             }
-            
+
             return isValid;
         }
 
-        // Funkcia na kontrolu posledného riadku a pridanie nového, ak je to potrebné
+        // Funkcia na kontrolu posledného riadku a pridanie nového, ak je to potrebné (iba pre Create mode)
         function checkLastRowAndAddNewIfNeeded() {
+            if (isEditMode) return; // V Edit mode nepridávame automaticky riadky
+
             const table = document.getElementById("itemTable");
             const rows = table.getElementsByTagName("tr");
-            
+
             if (rows.length > 0) {
                 const lastRow = rows[rows.length - 1];
-                
+
                 // Ak je posledný riadok vyplnený, pridáme nový prázdny riadok
                 if (isRowFilled(lastRow)) {
                     let hasEmptyRow = false;
-                    
+
                     // Skontrolujeme, či už nemáme prázdny riadok niekde v tabuľke
                     for (let i = 0; i < rows.length - 1; i++) {
                         if (isRowEmpty(rows[i])) {
@@ -222,7 +363,7 @@
                             break;
                         }
                     }
-                    
+
                     if (!hasEmptyRow) {
                         addNewRow();
                     }
@@ -231,62 +372,62 @@
         }
 
         // Validácia formulára pred odoslaním
-        document.getElementById('createForm').addEventListener('submit', function(e) {
+        document.getElementById('createForm').addEventListener('submit', function (e) {
             const table = document.getElementById("itemTable");
             const rows = table.getElementsByTagName("tr");
             let hasFilledRow = false;
             let hasErrors = false;
-            
+
             // Validujeme všetky riadky a kontrolujeme, či máme aspoň jeden vyplnený riadok
             for (let i = 0; i < rows.length; i++) {
                 const row = rows[i];
-                
+
                 if (!isRowEmpty(row)) {
                     hasFilledRow = true;
-                    
+
                     // Ak riadok nie je validný, máme chybu
                     if (!validateRow(row)) {
                         hasErrors = true;
                     }
                 }
             }
-            
+
             // Ak sú chyby, zabránime odoslaniu formulára
             if (hasErrors) {
                 e.preventDefault();
-                
+
                 const errorDiv = document.getElementById('validationErrors');
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'Prosím, opravte chyby vo formulári pred odoslaním.';
-                
+
                 return;
             }
-            
-            // Ak užívateľ chce pokračovať a nemá vyplnené žiadne položky, zobrazíme potvrdenie
-            if (!hasFilledRow && e.submitter && e.submitter.getAttribute('value') === 'continue') {
+
+            // Ak užívateľ chce pokračovať a nemá vyplnené žiadne položky, zobrazíme potvrdenie (iba v Create mode)
+            if (!isEditMode && !hasFilledRow && e.submitter && e.submitter.getAttribute('value') === 'continue') {
                 const confirmContinue = confirm('Neboli zadané žiadne programové položky. Chcete pokračovať bez programových položiek?');
-                
+
                 if (!confirmContinue) {
                     e.preventDefault();
                     return;
                 }
             }
-            
-            // Pred odoslaním formulára odstránime prázdne riadky
-            for (let i = rows.length - 1; i >= 0; i--) {
-                if (isRowEmpty(rows[i])) {
-                    // Pre prázdne riadky nastavíme polia na null alebo ich môžeme úplne odstrániť
-                    // Používame CSS pre skrytie, aby sme nestratili poradie pri binding
-                    rows[i].style.display = 'none';
+
+            // Pred odoslaním formulára odstránime prázdne riadky (iba v Create mode)
+            if (!isEditMode) {
+                for (let i = rows.length - 1; i >= 0; i--) {
+                    if (isRowEmpty(rows[i])) {
+                        rows[i].style.display = 'none';
+                    }
                 }
             }
         });
 
         // Inicializujeme event listenery pre existujúce riadky
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const table = document.getElementById("itemTable");
             const rows = table.getElementsByTagName("tr");
-            
+
             for (let i = 0; i < rows.length; i++) {
                 setupRowEventListeners(rows[i]);
             }
