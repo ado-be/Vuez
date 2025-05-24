@@ -12,6 +12,14 @@ namespace vuez.Models.ViewModels
         [BindNever]
         public ConfigurationSheet ConfigurationSheet { get; set; } = new ConfigurationSheet();
 
+        [BindNever]
         public List<ProgramItem> AllItems { get; set; } = new List<ProgramItem>();
+
+        // Přidané reference na nové modely
+        public ProgramReview ProgramReview { get; set; }
+
+        public ProgramVerification ProgramVerification { get; set; }
+
+        public ProgramRelease ProgramRelease { get; set; }
     }
 }

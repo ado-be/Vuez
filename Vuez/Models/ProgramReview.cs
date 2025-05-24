@@ -1,31 +1,40 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using vuez.Models;
 
-namespace vuez.Models
+[Table("ProgramReview")]
+public class ProgramReview
 {
-    public class ProgramReview
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)] // Ak je ReviewId auto-increment
-        public int ReviewId { get; set; }
+    [Key]
+    [Column("ReviewID")]
+    public int ReviewId { get; set; }
 
-        [Required]
-        public int DetailId { get; set; }
+    [Required]
+    [Column("DetailID")]
+    public int DetailId { get; set; }
 
-        public string? ReviewForm { get; set; }
+    [Column("ReviewForm")]
+    public string? ReviewForm { get; set; }
 
-        public string? ReviewResult { get; set; }
+    [Column("ReviewResult")]
+    public string? ReviewResult { get; set; }
 
-        public string? Reviewer { get; set; }
+    [Column("Reviewer")]
+    public string? Reviewer { get; set; }
 
-        public string? ReviewerSignature { get; set; }
+    [Column("ReviewerSignature")]
+    public string? ReviewerSignature { get; set; }
 
-        // Ak EF Core nepozná DateOnly, nahraď DateTime?
-        public DateOnly? ReviewDate { get; set; }
+    // ✅ TOTO MUSÍ BYŤ Guid? (NIE int?)
+    [Column("ReviewerUserId")]
+    public Guid? ReviewerUserId { get; set; }
 
-        // Navigácia
-        [ForeignKey("DetailId")]
-        public virtual ProgramItemDetail Detail { get; set; } = null!;
-    }
+    [Column("ReviewDate")]
+    public DateOnly? ReviewDate { get; set; }
+
+    [ForeignKey("DetailId")]
+    public virtual ProgramItemDetail Detail { get; set; } = null!;
+
+    [ForeignKey("ReviewerUserId")]
+    public virtual User? ReviewerUser { get; set; }
 }

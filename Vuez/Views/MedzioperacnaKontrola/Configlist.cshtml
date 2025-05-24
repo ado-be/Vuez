@@ -14,7 +14,8 @@
 
 <h1>Konfiguračný list</h1>
 
-
+<!-- Hidden input pre podpis URL (môžete ho načítať z databázy alebo session) -->
+<input type="hidden" id="podpisUrl" value="@(ViewBag.UserSignatureUrl ?? "/images/default-signature.png")" />
 
 <!-- Manuální formulář bez model bindingu -->
 <form method="post" action="/MedzioperacnaKontrola/SaveFormData">
@@ -24,8 +25,13 @@
     <input type="hidden" name="configId" value="@configId" />
     <input type="hidden" name="itemId" value="@(Model?.Item?.ItemId ?? 0)" />
     <input type="hidden" name="detailId" value="@(Model?.Detail?.DetailId ?? 0)" />
-    <input type="hidden" name="ppnumber" value="@(Model?.Detail?.Ppnumber ?? "")" class="form-control" />
-    <input type="hidden" name="ppname" value="@(Model?.Detail?.Ppname ?? "")" class="form-control" />
+    <input type="hidden" name="ppnumber" value="@(Model?.Detail?.Ppnumber ?? "")" />
+    <input type="hidden" name="ppname" value="@(Model?.Detail?.Ppname ?? "")" />
+
+    <!-- PRIDANÉ: Hidden inputy pre sledovanie podpisov -->
+    <input type="hidden" id="reviewerSigned" name="reviewerSigned" value="@(Model?.ProgramReview?.ReviewerUserId != null ? "true" : "false")" />
+    <input type="hidden" id="verifierSigned" name="verifierSigned" value="@(Model?.ProgramVerification?.VerifierUserId != null ? "true" : "false")" />
+    <input type="hidden" id="releaseSigned" name="releaseSigned" value="@(Model?.ProgramRelease?.ReleasedByUserId != null ? "true" : "false")" />
 
     <div class="protocol-container">
         <h2>Základné informácie</h2>
@@ -83,7 +89,6 @@
             </tr>
 
             <!-- Detail -->
-                   
             <tr>
                 <td>Spracovateľ:</td>
                 <td>
@@ -128,6 +133,188 @@
             </tr>
         </table>
 
+        <!-- SEKCE Záverečné preskúmanie návrhu PP (využití ProgramReview) -->
+        <h2 class="mt-4">Záverečné preskúmanie návrhu PP</h2>
+        <table class="form-table border">
+            <tr>
+                <td colspan="3" class="border">
+                    <div class="form-group">
+                        <label for="reviewForm">Forma preskúmania:</label>
+                        <input type="text" id="reviewForm" name="reviewForm" class="form-control"
+                               value="@(Model?.ProgramReview?.ReviewForm ?? "")" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="border">
+                    <div class="form-group">
+                        <label for="reviewResult">Výsledok preskúmania:</label>
+                        <textarea id="reviewResult" name="reviewResult" class="form-control" rows="4">@(Model?.ProgramReview?.ReviewResult ?? "")</textarea>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label for="reviewer">Preskúmal:</label>
+                        <input type="text" id="reviewer" name="reviewer" class="form-control"
+                               value="@(Model?.ProgramReview?.Reviewer ?? "")" />
+                    </div>
+                </td>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label>Podpis:</label>
+                        <div class="signature-container">
+                            <div id="reviewSignatureDisplay" class="signature-display">
+                                @if (!string.IsNullOrEmpty(Model?.ProgramReview?.ReviewerSignature))
+                                {
+                                    <img src="@Model.ProgramReview.ReviewerSignature" class="signature-img" alt="Podpis" />
+                                }
+                            </div>
+                            <input type="hidden" id="reviewerSignature" name="reviewerSignature"
+                                   value="@(Model?.ProgramReview?.ReviewerSignature ?? "")" />
+                            @if (User.IsInRole("Technician") || User.IsInRole("Admin"))
+                            {
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-1"
+                                        onclick="podpisovat('review')">
+                                    Podpísať
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-1"
+                                        onclick="zmazatPodpis('review')">
+                                    Zmazať
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </td>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label for="reviewDate">Dátum:</label>
+                        <input type="date" id="reviewDate" name="reviewDate" class="form-control"
+                               value="@(Model?.ProgramReview?.ReviewDate?.ToString("yyyy-MM-dd") ?? "")" />
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- SEKCE Záverečné overenie návrhu PP (využití ProgramVerification) -->
+        <h2 class="mt-4">Záverečné overenie návrhu PP</h2>
+        <table class="form-table border">
+            <tr>
+                <td colspan="3" class="border">
+                    <div class="form-group">
+                        <label for="verificationForm">Forma overenia:</label>
+                        <input type="text" id="verificationForm" name="verificationForm" class="form-control"
+                               value="@(Model?.ProgramVerification?.ReviewForm ?? "")" />
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3" class="border">
+                    <div class="form-group">
+                        <label for="verificationResult">Výsledok overenia:</label>
+                        <textarea id="verificationResult" name="verificationResult" class="form-control" rows="4">@(Model?.ProgramVerification?.ReviewResult ?? "")</textarea>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label for="verifier">Preskúmal:</label>
+                        <input type="text" id="verifier" name="verifier" class="form-control"
+                               value="@(Model?.ProgramVerification?.Reviewer ?? "")" />
+                    </div>
+                </td>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label>Podpis:</label>
+                        <div class="signature-container">
+                            <div id="verificationSignatureDisplay" class="signature-display">
+                                @if (!string.IsNullOrEmpty(Model?.ProgramVerification?.ReviewerSignature))
+                                {
+                                    <img src="@Model.ProgramVerification.ReviewerSignature" class="signature-img" alt="Podpis" />
+                                }
+                            </div>
+                            <input type="hidden" id="verifierSignature" name="verifierSignature"
+                                   value="@(Model?.ProgramVerification?.ReviewerSignature ?? "")" />
+                            @if (User.IsInRole("Technician") || User.IsInRole("Admin"))
+                            {
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-1"
+                                        onclick="podpisovat('verification')">
+                                    Podpísať
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-1"
+                                        onclick="zmazatPodpis('verification')">
+                                    Zmazať
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </td>
+                <td class="border" style="width: 33%;">
+                    <div class="form-group">
+                        <label for="verificationDate">Dátum:</label>
+                        <input type="date" id="verificationDate" name="verificationDate" class="form-control"
+                               value="@(Model?.ProgramVerification?.ReviewDate?.ToString("yyyy-MM-dd") ?? "")" />
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- SEKCE Uvoľnenie PP (využití ProgramRelease) -->
+        <h2 class="mt-4">Uvoľnenie PP</h2>
+        <table class="form-table border">
+            <tr>
+                <td class="border" style="width: 20%;">
+                    <div class="form-group">
+                        <label for="releasedBy">Uvoľnil:</label>
+                        <input type="text" id="releasedBy" name="releasedBy" class="form-control"
+                               value="@(Model?.ProgramRelease?.ReleasedBy ?? "")" />
+                    </div>
+                </td>
+                <td class="border" style="width: 25%;">
+                    <div class="form-group d-flex align-items-center mt-4">
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isReleased" id="releasedYes" value="true"
+                            @(Model?.ProgramRelease?.IsReleased == true ? "checked" : "") />
+                            <label class="form-check-label" for="releasedYes">áno</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="isReleased" id="releasedNo" value="false"
+                            @(Model?.ProgramRelease?.IsReleased == false ? "checked" : "") />
+                            <label class="form-check-label" for="releasedNo">nie</label>
+                        </div>
+                    </div>
+                </td>
+                <td class="border" style="width: 55%;">
+                    <div class="form-group">
+                        <label>Podpis:</label>
+                        <div class="signature-container">
+                            <div id="releaseSignatureDisplay" class="signature-display">
+                                @if (!string.IsNullOrEmpty(Model?.ProgramRelease?.ReleaseSignature))
+                                {
+                                    <img src="@Model.ProgramRelease.ReleaseSignature" class="signature-img" alt="Podpis" />
+                                }
+                            </div>
+                            <input type="hidden" id="releaseSignature" name="releaseSignature"
+                                   value="@(Model?.ProgramRelease?.ReleaseSignature ?? "")" />
+                            @if (User.IsInRole("Manager") || User.IsInRole("Admin"))
+                            {
+                                <button type="button" class="btn btn-outline-primary btn-sm mt-1"
+                                        onclick="podpisovat('release')">
+                                    Podpísať
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm mt-1"
+                                        onclick="zmazatPodpis('release')">
+                                    Zmazať
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
         <!-- Validační chyby -->
         @if (TempData.ContainsKey("ErrorMessage"))
         {
@@ -155,33 +342,131 @@
     </div>
 </form>
 
-<!-- Diagnostický JavaScript -->
+<!-- Styly pro formulář -->
+<style>
+    .form-table {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .border {
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+    }
+
+    .form-group {
+        margin-bottom: 0.5rem;
+    }
+
+    .signature-container {
+        min-height: 60px;
+    }
+
+    .signature-display {
+        min-height: 50px;
+        border: 1px dashed #ccc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 5px;
+        background-color: #f8f9fa;
+    }
+
+    .signature-img {
+        max-height: 50px;
+        max-width: 200px;
+    }
+
+    .signature-display:empty::before {
+        content: "Žiadny podpis";
+        color: #6c757d;
+        font-style: italic;
+    }
+</style>
+
+<!-- JavaScript pre podpisovanie -->
 <script>
+    // Získanie URL podpisu používateľa
+    const podpisUrl = document.getElementById('podpisUrl').value;
+
+    // Funkcia pre podpisovanie
+    function podpisovat(section) {
+        if (!podpisUrl || podpisUrl === '/images/default-signature.png') {
+            alert("Chýba váš podpis. Kontaktujte administrátora pre nastavenie podpisu.");
+            return;
+        }
+
+        // Automatické vyplnenie mena používateľa
+        const userName = "@User.Identity.Name"; // Alebo iný spôsob získania mena
+
+        switch (section) {
+            case 'review':
+                document.getElementById('reviewSignatureDisplay').innerHTML =
+                    `<img src="${podpisUrl}" class="signature-img" alt="Podpis" />`;
+                document.getElementById('reviewerSignature').value = podpisUrl;
+                document.getElementById('reviewerSigned').value = 'true'; // PRIDANÉ
+                if (!document.getElementById('reviewer').value) {
+                    document.getElementById('reviewer').value = userName;
+                }
+                if (!document.getElementById('reviewDate').value) {
+                    document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+                }
+                break;
+
+            case 'verification':
+                document.getElementById('verificationSignatureDisplay').innerHTML =
+                    `<img src="${podpisUrl}" class="signature-img" alt="Podpis" />`;
+                document.getElementById('verifierSignature').value = podpisUrl;
+                document.getElementById('verifierSigned').value = 'true'; // PRIDANÉ
+                if (!document.getElementById('verifier').value) {
+                    document.getElementById('verifier').value = userName;
+                }
+                if (!document.getElementById('verificationDate').value) {
+                    document.getElementById('verificationDate').value = new Date().toISOString().split('T')[0];
+                }
+                break;
+
+            case 'release':
+                document.getElementById('releaseSignatureDisplay').innerHTML =
+                    `<img src="${podpisUrl}" class="signature-img" alt="Podpis" />`;
+                document.getElementById('releaseSignature').value = podpisUrl;
+                document.getElementById('releaseSigned').value = 'true'; // PRIDANÉ
+                if (!document.getElementById('releasedBy').value) {
+                    document.getElementById('releasedBy').value = userName;
+                }
+                break;
+        }
+    }
+
+    // Funkcia pre zmazanie podpisu
+    function zmazatPodpis(section) {
+        switch (section) {
+            case 'review':
+                document.getElementById('reviewSignatureDisplay').innerHTML = '';
+                document.getElementById('reviewerSignature').value = '';
+                document.getElementById('reviewerSigned').value = 'false'; // PRIDANÉ
+                break;
+
+            case 'verification':
+                document.getElementById('verificationSignatureDisplay').innerHTML = '';
+                document.getElementById('verifierSignature').value = '';
+                document.getElementById('verifierSigned').value = 'false'; // PRIDANÉ
+                break;
+
+            case 'release':
+                document.getElementById('releaseSignatureDisplay').innerHTML = '';
+                document.getElementById('releaseSignature').value = '';
+                document.getElementById('releaseSigned').value = 'false'; // PRIDANÉ
+                break;
+        }
+    }
+
+    // Diagnostický kód pre formulár
     document.querySelector('form').addEventListener('submit', function (e) {
-        // Logování odesílaných dat
         console.log('Odesílaná data:');
         var formData = new FormData(this);
         for (var pair of formData.entries()) {
             console.log(pair[0] + ': ' + pair[1]);
-        }
-
-        // Kontrola povinných polí
-        var configId = document.querySelector('input[name="configId"]').value;
-        var itemCode = document.querySelector('input[name="itemCode"]').value;
-        var itemName = document.querySelector('input[name="itemName"]').value;
-        var ppname = document.querySelector('input[name="ppname"]').value;
-        var ppnumber = document.querySelector('input[name="ppnumber"]').value;
-
-        if (!configId || configId <= 0) {
-            console.error('Chybí configId!');
-        }
-
-        if (!itemCode) {
-            console.error('Chybí kód položky!');
-        }
-
-        if (!itemName) {
-            console.error('Chybí název položky!');
         }
     });
 </script>

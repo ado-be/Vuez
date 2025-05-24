@@ -1,29 +1,40 @@
-﻿using System;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using vuez.Models;
 
-namespace vuez.Models
+[Table("ProgramRelease")]
+public class ProgramRelease
 {
-    public class ProgramRelease
-    {
-        [Key]
-        public int ReleaseId { get; set; }
+    [Key]
+    [Column("ReleaseID")]
+    public int ReleaseId { get; set; }
 
-        [Required]
-        public int DetailId { get; set; }
+    [Required]
+    [Column("DetailID")]
+    public int DetailId { get; set; }
 
-        public string? Documentation { get; set; }
+    [Column("Documentation")]
+    public string? Documentation { get; set; }
 
-        public string? ReleasedBy { get; set; }
+    [Column("ReleasedBy")]
+    public string? ReleasedBy { get; set; }
 
-        public bool IsReleased { get; set; }
+    [Column("IsReleased")]
+    public bool IsReleased { get; set; }
 
-        public string? ReleaseSignature { get; set; }
+    [Column("ReleaseSignature")]
+    public string? ReleaseSignature { get; set; }
 
-        public DateTime? ReleasedDate { get; set; }
+    // ✅ TOTO MUSÍ BYŤ Guid? (NIE int?)
+    [Column("ReleasedByUserId")]
+    public Guid? ReleasedByUserId { get; set; }
 
-        [ForeignKey("DetailId")]
-        public virtual ProgramItemDetail Detail { get; set; } = null!;
-    }
+    [Column("ReleasedDate")]
+    public DateTime? ReleasedDate { get; set; }
 
+    [ForeignKey("DetailId")]
+    public virtual ProgramItemDetail Detail { get; set; } = null!;
+
+    [ForeignKey("ReleasedByUserId")]
+    public virtual User? ReleasedByUser { get; set; }
 }

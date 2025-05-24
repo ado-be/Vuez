@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation; // 👈 pridaj toto
-
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 namespace vuez.Models
 {
     public class ProgramItem
@@ -22,7 +21,7 @@ namespace vuez.Models
 
         public string? ItemDescription { get; set; }
 
-        // 🔧 Oprava: zabránime validácii tejto navigačnej property
+       
         [ValidateNever]
         public virtual ConfigurationSheet Config { get; set; } = null!;
 

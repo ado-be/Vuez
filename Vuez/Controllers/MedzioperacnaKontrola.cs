@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
@@ -11,10 +12,57 @@ namespace vuez.Controllers
     public class MedzioperacnaKontrola : Controller
     {
         private readonly AppDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public MedzioperacnaKontrola(AppDbContext context)
+        public MedzioperacnaKontrola(AppDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
+        }
+
+        private async Task<Guid?> GetCurrentUserId()
+        {
+            try
+            {
+                var currentUserName = User.Identity?.Name;
+                if (string.IsNullOrEmpty(currentUserName))
+                {
+                    System.Diagnostics.Debug.WriteLine("❌ User.Identity.Name je prázdny");
+                    return null;
+                }
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.UserName == currentUserName);
+
+                if (user == null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Používateľ {currentUserName} nebol nájdený v databáze");
+                    return null;
+                }
+
+                // Jednoducho skúsiť parsovať user.Id bez type checking
+                try
+                {
+                    var userIdString = user.Id.ToString();
+                    if (Guid.TryParse(userIdString, out Guid userId))
+                    {
+                        System.Diagnostics.Debug.WriteLine($"🔍 GetCurrentUserId: {currentUserName} -> UserId: {userId}");
+                        return userId;
+                    }
+                }
+                catch (Exception parseEx)
+                {
+                    System.Diagnostics.Debug.WriteLine($"❌ Chyba pri parsovaní UserId: {parseEx.Message}");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"❌ Nemôžem konvertovať User.Id na Guid");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Chyba pri získavaní UserId: {ex.Message}");
+                return null;
+            }
         }
 
         public async Task<IActionResult> Index()
@@ -156,7 +204,7 @@ namespace vuez.Controllers
                 return View(model);
             }
         }
-
+     
         [HttpGet]
         public async Task<IActionResult> Configlist(int configId, int? index)
         {
@@ -181,6 +229,30 @@ namespace vuez.Controllers
             var detail = await _context.ProgramItemDetails
                 .FirstOrDefaultAsync(d => d.ItemId == item.ItemId);
 
+            // OPRAVENÉ: Načítanie súvisiacich záznamov S používateľmi pre podpisy
+            ProgramReview programReview = null;
+            ProgramVerification programVerification = null;
+            ProgramRelease programRelease = null;
+
+            if (detail != null)
+            {
+                // PRIDANÉ: Include používateľov pre načítanie podpisov
+                programReview = await _context.ProgramReviews
+                    .Include(r => r.ReviewerUser)           // Navigation property pre používateľa
+                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
+
+                programVerification = await _context.ProgramVerifications
+                    .Include(v => v.VerifierUser)           // Navigation property pre používateľa
+                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .FirstOrDefaultAsync(v => v.DetailId == detail.DetailId);
+
+                programRelease = await _context.ProgramReleases
+                    .Include(r => r.ReleasedByUser)         // Navigation property pre používateľa
+                    .ThenInclude(u => u.Details)            // Podpis používateľa
+                    .FirstOrDefaultAsync(r => r.DetailId == detail.DetailId);
+            }
+
             // Príprava detailu (bez ukladania!)
             if (detail == null)
             {
@@ -192,7 +264,6 @@ namespace vuez.Controllers
                     RelatedDocumentation = sheet.RelatedDocumentation,
                     Connections = sheet.RelatedHwsw,
                     ModifiedBy = sheet.Processor
-                    // NEukladáme – dáta vyplní používateľ vo formulári
                 };
 
                 System.Diagnostics.Debug.WriteLine($"📝 Pripravený nový detail pre ItemId {item.ItemId} (bez uloženia)");
@@ -202,16 +273,54 @@ namespace vuez.Controllers
                 System.Diagnostics.Debug.WriteLine($"📥 Načítaný existujúci detail pre ItemId {item.ItemId}");
             }
 
+            // Nastavenie podpisu používateľa
+            await SetUserSignature();
+
             var model = new ProgramItemConfigViewModel
             {
                 Item = item,
                 Detail = detail,
                 AllItems = items,
-                ConfigurationSheet = sheet
+                ConfigurationSheet = sheet,
+                ProgramReview = programReview,
+                ProgramVerification = programVerification,
+                ProgramRelease = programRelease
             };
 
-            // View sa vyberá podľa toho, či ideš na prvý alebo konkrétny index
             return index == null ? View("Configlist", model) : View("ProgramItemForm", model);
+        }
+
+        // PRIDANÁ NOVÁ METÓDA PRE NASTAVENIE PODPISU (rovnaký systém ako vo VstupnaKontrolaController)
+        private async Task SetUserSignature()
+        {
+            try
+            {
+                var currentUser = User.Identity.Name;
+                System.Diagnostics.Debug.WriteLine($"🔍 Current user: {currentUser}");
+
+                // Získanie podpisu z UserDetail tabuľky
+                var user = await _context.Users
+                    .Include(u => u.Details)
+                    .FirstOrDefaultAsync(u => u.UserName == currentUser);
+
+                if (user?.Details?.SignatureImagePath != null)
+                {
+                    ViewBag.UserSignatureUrl = user.Details.SignatureImagePath;
+                    System.Diagnostics.Debug.WriteLine($"🔍 User signature path from UserDetail: {user.Details.SignatureImagePath}");
+                }
+                else
+                {
+                    ViewBag.UserSignatureUrl = "/images/default-signature.png";
+                    System.Diagnostics.Debug.WriteLine($"🔍 No signature found, using default");
+                }
+
+                System.Diagnostics.Debug.WriteLine($"🔍 Final ViewBag.UserSignatureUrl: {ViewBag.UserSignatureUrl}");
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"❌ Chyba pri nastavovaní podpisu: {ex.Message}");
+                ViewBag.UserSignatureUrl = "/images/default-signature.png";
+            }
         }
 
 
@@ -331,6 +440,11 @@ namespace vuez.Controllers
         {
             try
             {
+                // Získanie aktuálneho používateľa a jeho ID
+                var currentUser = User.Identity.Name;
+                var currentUserId = await GetCurrentUserId();
+                System.Diagnostics.Debug.WriteLine($"📄 SaveFormData: Používateľ {currentUser} (ID: {currentUserId}) ukladá formulář");
+
                 // Získání hodnot přímo z formuláře
                 int configId = 0;
                 int.TryParse(Request.Form["configId"], out configId);
@@ -355,14 +469,57 @@ namespace vuez.Controllers
                 string relatedDocumentation = Request.Form["relatedDocumentation"];
                 string notes = Request.Form["notes"];
 
+                // Nové údaje pro preskúmanie (ProgramReview)
+                string reviewForm = Request.Form["reviewForm"];
+                string reviewResult = Request.Form["reviewResult"];
+                string reviewer = Request.Form["reviewer"];
+                string reviewDate = Request.Form["reviewDate"];
+                // ZMENENÉ: Kontrola či používateľ podpísal (namiesto URL kontrolujeme či má podpis v DB)
+                bool reviewerSigned = !string.IsNullOrEmpty(Request.Form["reviewerSigned"]) && Request.Form["reviewerSigned"] == "true";
+
+                // Nové údaje pro overenie (ProgramVerification)
+                string verificationForm = Request.Form["verificationForm"];
+                string verificationResult = Request.Form["verificationResult"];
+                string verifier = Request.Form["verifier"];
+                string verificationDate = Request.Form["verificationDate"];
+                bool verifierSigned = !string.IsNullOrEmpty(Request.Form["verifierSigned"]) && Request.Form["verifierSigned"] == "true";
+
+                // Nové údaje pro uvoľnenie (ProgramRelease)
+                string releasedBy = Request.Form["releasedBy"];
+                bool isReleased = Request.Form["isReleased"].ToString() == "true";
+                bool releaseSigned = !string.IsNullOrEmpty(Request.Form["releaseSigned"]) && Request.Form["releaseSigned"] == "true";
+
+                // PRIDANÉ: Automatické nastavenie používateľa ak nie je zadané
+                if (string.IsNullOrEmpty(modifiedBy))
+                {
+                    modifiedBy = currentUser;
+                    System.Diagnostics.Debug.WriteLine($"📄 Automaticky nastavený modifiedBy: {modifiedBy}");
+                }
+
+                if (reviewerSigned && string.IsNullOrEmpty(reviewer))
+                {
+                    reviewer = currentUser;
+                    System.Diagnostics.Debug.WriteLine($"📄 Automaticky nastavený reviewer: {reviewer}");
+                }
+
+                if (verifierSigned && string.IsNullOrEmpty(verifier))
+                {
+                    verifier = currentUser;
+                    System.Diagnostics.Debug.WriteLine($"📄 Automaticky nastavený verifier: {verifier}");
+                }
+
+                if (releaseSigned && string.IsNullOrEmpty(releasedBy))
+                {
+                    releasedBy = currentUser;
+                    System.Diagnostics.Debug.WriteLine($"📄 Automaticky nastavený releasedBy: {releasedBy}");
+                }
+
                 // Logování pro diagnostiku
                 System.Diagnostics.Debug.WriteLine($"📄 SaveFormData: Zpracovávám formulář");
                 System.Diagnostics.Debug.WriteLine($"📄 configId: {configId}");
-                System.Diagnostics.Debug.WriteLine($"📄 itemId: {itemId}");
-                System.Diagnostics.Debug.WriteLine($"📄 itemCode: {itemCode}");
-                System.Diagnostics.Debug.WriteLine($"📄 itemName: {itemName}");
-                System.Diagnostics.Debug.WriteLine($"📄 ppname: {ppname}");
-                System.Diagnostics.Debug.WriteLine($"📄 ppnumber: {ppnumber}");
+                System.Diagnostics.Debug.WriteLine($"📄 reviewer: {reviewer}, reviewerSigned: {reviewerSigned}");
+                System.Diagnostics.Debug.WriteLine($"📄 verifier: {verifier}, verifierSigned: {verifierSigned}");
+                System.Diagnostics.Debug.WriteLine($"📄 releasedBy: {releasedBy}, releaseSigned: {releaseSigned}");
 
                 // Validace nezbytných údajů
                 if (configId <= 0)
@@ -385,81 +542,70 @@ namespace vuez.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Uložení nebo aktualizace položky
-                ProgramItem item;
-                if (itemId > 0)
+                // Začíname transakciu pre konzistentnosť
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    // Aktualizace existující položky
-                    item = await _context.ProgramItems.FindAsync(itemId);
-                    if (item != null)
+                    try
                     {
-                        item.ItemCode = itemCode;
-                        item.ItemName = itemName;
-                        item.ItemDescription = itemDescription;
-                        _context.Entry(item).State = EntityState.Modified;
-                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace položky ID: {itemId}");
-                    }
-                    else
-                    {
-                        // Položka s daným ID nebyla nalezena, vytvoříme novou
-                        item = new ProgramItem
+                        // ... váš existujúci kód pre ProgramItem a ProgramItemDetail zostáva rovnaký ...
+
+                        // Uložení nebo aktualizace položky
+                        ProgramItem item;
+                        if (itemId > 0)
                         {
-                            ConfigId = configId,
-                            ItemCode = itemCode,
-                            ItemName = itemName,
-                            ItemDescription = itemDescription
-                        };
-                        _context.ProgramItems.Add(item);
-                        System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nové položky (původní ID {itemId} neexistuje)");
-                    }
-                }
-                else
-                {
-                    // Vytvoření nové položky
-                    item = new ProgramItem
-                    {
-                        ConfigId = configId,
-                        ItemCode = itemCode,
-                        ItemName = itemName,
-                        ItemDescription = itemDescription
-                    };
-                    _context.ProgramItems.Add(item);
-                    System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nové položky");
-                }
+                            item = await _context.ProgramItems.FindAsync(itemId);
+                            if (item != null)
+                            {
+                                item.ItemCode = itemCode;
+                                item.ItemName = itemName;
+                                item.ItemDescription = itemDescription;
+                                _context.Entry(item).State = EntityState.Modified;
+                            }
+                            else
+                            {
+                                item = new ProgramItem
+                                {
+                                    ConfigId = configId,
+                                    ItemCode = itemCode,
+                                    ItemName = itemName,
+                                    ItemDescription = itemDescription
+                                };
+                                _context.ProgramItems.Add(item);
+                            }
+                        }
+                        else
+                        {
+                            item = new ProgramItem
+                            {
+                                ConfigId = configId,
+                                ItemCode = itemCode,
+                                ItemName = itemName,
+                                ItemDescription = itemDescription
+                            };
+                            _context.ProgramItems.Add(item);
+                        }
 
-                // Uložit položku pro získání ID (pokud je nová)
-                if (item.ItemId <= 0)
-                {
-                    await _context.SaveChangesAsync();
-                    itemId = item.ItemId;
-                    System.Diagnostics.Debug.WriteLine($"📝 Nové ItemId: {itemId}");
-                }
+                        if (item.ItemId <= 0)
+                        {
+                            await _context.SaveChangesAsync();
+                            itemId = item.ItemId;
+                        }
 
-                // Uložení nebo aktualizace detailu
-                ProgramItemDetail detail;
-                if (detailId > 0)
-                {
-                    // Aktualizace existujícího detailu
-                    detail = await _context.ProgramItemDetails.FindAsync(detailId);
-                    if (detail != null)
-                    {
-                        detail.Ppname = ppname;
-                        detail.Ppnumber = ppnumber;
-                        detail.ModifiedBy = modifiedBy;
-                        detail.InitialVersionNumber = initialVersionNumber;
-                        detail.DevelopmentTools = developmentTools;
-                        detail.DevelopmentPc = developmentPc;
-                        detail.Connections = connections;
-                        detail.RelatedDocumentation = relatedDocumentation;
-                        detail.Notes = notes;
-                        detail.LastModifiedDate = DateTime.Now;
-                        _context.Entry(detail).State = EntityState.Modified;
-                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu ID: {detailId}");
-                    }
-                    else
-                    {
-                        // Detail s daným ID nebyl nalezen, zkusit najít podle ItemId
-                        detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
+                        // Detail handling...
+                        ProgramItemDetail detail;
+                        if (detailId > 0)
+                        {
+                            detail = await _context.ProgramItemDetails.FindAsync(detailId);
+                            if (detail == null)
+                            {
+                                detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
+                            }
+                        }
+                        else
+                        {
+                            detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
+                        }
+
                         if (detail != null)
                         {
                             detail.Ppname = ppname;
@@ -473,11 +619,9 @@ namespace vuez.Controllers
                             detail.Notes = notes;
                             detail.LastModifiedDate = DateTime.Now;
                             _context.Entry(detail).State = EntityState.Modified;
-                            System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu podle ItemId: {itemId}");
                         }
                         else
                         {
-                            // Vytvoření nového detailu
                             detail = new ProgramItemDetail
                             {
                                 ItemId = itemId,
@@ -493,57 +637,28 @@ namespace vuez.Controllers
                                 LastModifiedDate = DateTime.Now
                             };
                             _context.ProgramItemDetails.Add(detail);
-                            System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového detailu pro ItemId: {itemId}");
                         }
+
+                        await _context.SaveChangesAsync();
+                        detailId = detail.DetailId;
+
+                        // ZMENENÉ: Volanie helper metód s UserId
+                        await SaveProgramReview(detailId, reviewForm, reviewResult, reviewer, reviewerSigned ? currentUserId : null, reviewDate);
+                        await SaveProgramVerification(detailId, verificationForm, verificationResult, verifier, verifierSigned ? currentUserId : null, verificationDate);
+                        await SaveProgramRelease(detailId, releasedBy, isReleased, releaseSigned ? currentUserId : null);
+
+                        await _context.SaveChangesAsync();
+                        await transaction.CommitAsync();
+
+                        System.Diagnostics.Debug.WriteLine("✅ Data úspěšně uložena");
+                        return RedirectToAction("ExamRecord", new { configId });
+                    }
+                    catch (Exception)
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
                     }
                 }
-                else
-                {
-                    // Zkusit najít existující detail podle ItemId
-                    detail = await _context.ProgramItemDetails.FirstOrDefaultAsync(d => d.ItemId == itemId);
-                    if (detail != null)
-                    {
-                        detail.Ppname = ppname;
-                        detail.Ppnumber = ppnumber;
-                        detail.ModifiedBy = modifiedBy;
-                        detail.InitialVersionNumber = initialVersionNumber;
-                        detail.DevelopmentTools = developmentTools;
-                        detail.DevelopmentPc = developmentPc;
-                        detail.Connections = connections;
-                        detail.RelatedDocumentation = relatedDocumentation;
-                        detail.Notes = notes;
-                        detail.LastModifiedDate = DateTime.Now;
-                        _context.Entry(detail).State = EntityState.Modified;
-                        System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace detailu podle ItemId: {itemId}");
-                    }
-                    else
-                    {
-                        // Vytvoření nového detailu
-                        detail = new ProgramItemDetail
-                        {
-                            ItemId = itemId,
-                            Ppname = ppname,
-                            Ppnumber = ppnumber,
-                            ModifiedBy = modifiedBy,
-                            InitialVersionNumber = initialVersionNumber,
-                            DevelopmentTools = developmentTools,
-                            DevelopmentPc = developmentPc,
-                            Connections = connections,
-                            RelatedDocumentation = relatedDocumentation,
-                            Notes = notes,
-                            LastModifiedDate = DateTime.Now
-                        };
-                        _context.ProgramItemDetails.Add(detail);
-                        System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového detailu pro ItemId: {itemId}");
-                    }
-                }
-
-                // Uložit vše
-                await _context.SaveChangesAsync();
-                System.Diagnostics.Debug.WriteLine("✅ Data úspěšně uložena");
-
-                // Přesměrování na další krok
-                return RedirectToAction("ExamRecord", new { configId });
             }
             catch (Exception ex)
             {
@@ -552,7 +667,6 @@ namespace vuez.Controllers
 
                 TempData["ErrorMessage"] = $"Došlo k chybě při ukládání dat: {ex.Message}";
 
-                // Pokus o získání configId pro návrat zpět
                 int configId = 0;
                 int.TryParse(Request.Form["configId"], out configId);
 
@@ -566,6 +680,124 @@ namespace vuez.Controllers
                 }
             }
         }
+
+        // KROK 4: Aktualizované helper metódy s UserId
+        private async Task SaveProgramReview(int detailId, string reviewForm, string reviewResult, string reviewer, Guid? reviewerUserId, string reviewDateStr)
+        {
+            DateOnly? reviewDate = null;
+            if (!string.IsNullOrEmpty(reviewDateStr))
+            {
+                if (DateTime.TryParse(reviewDateStr, out DateTime tempDate))
+                {
+                    reviewDate = DateOnly.FromDateTime(tempDate);
+                }
+            }
+
+            var review = await _context.ProgramReviews.FirstOrDefaultAsync(r => r.DetailId == detailId);
+
+            if (review != null)
+            {
+                review.ReviewForm = reviewForm;
+                review.ReviewResult = reviewResult;
+                review.Reviewer = reviewer;
+                review.ReviewerUserId = reviewerUserId; // Guid?
+                review.ReviewDate = reviewDate;
+
+                _context.Entry(review).State = EntityState.Modified;
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}");
+            }
+            else if (!string.IsNullOrEmpty(reviewForm) || !string.IsNullOrEmpty(reviewResult) || !string.IsNullOrEmpty(reviewer) || reviewerUserId.HasValue)
+            {
+                var newReview = new ProgramReview
+                {
+                    DetailId = detailId,
+                    ReviewForm = reviewForm,
+                    ReviewResult = reviewResult,
+                    Reviewer = reviewer,
+                    ReviewerUserId = reviewerUserId, // Guid?
+                    ReviewDate = reviewDate
+                };
+
+                _context.ProgramReviews.Add(newReview);
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramReview pre DetailId: {detailId}, UserId: {reviewerUserId}");
+            }
+        }
+
+        private async Task SaveProgramVerification(int detailId, string verificationForm, string verificationResult, string verifier, Guid? verifierUserId, string verificationDateStr)
+        {
+            DateOnly? verificationDate = null;
+            if (!string.IsNullOrEmpty(verificationDateStr))
+            {
+                if (DateTime.TryParse(verificationDateStr, out DateTime tempDate))
+                {
+                    verificationDate = DateOnly.FromDateTime(tempDate);
+                }
+            }
+
+            var verification = await _context.ProgramVerifications.FirstOrDefaultAsync(v => v.DetailId == detailId);
+
+            if (verification != null)
+            {
+                verification.ReviewForm = verificationForm;
+                verification.ReviewResult = verificationResult;
+                verification.Reviewer = verifier;
+                verification.VerifierUserId = verifierUserId; // Guid?
+                verification.ReviewDate = verificationDate;
+
+                _context.Entry(verification).State = EntityState.Modified;
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}");
+            }
+            else if (!string.IsNullOrEmpty(verificationForm) || !string.IsNullOrEmpty(verificationResult) || !string.IsNullOrEmpty(verifier) || verifierUserId.HasValue)
+            {
+                var newVerification = new ProgramVerification
+                {
+                    DetailId = detailId,
+                    ReviewForm = verificationForm,
+                    ReviewResult = verificationResult,
+                    Reviewer = verifier,
+                    VerifierUserId = verifierUserId, // Guid?
+                    ReviewDate = verificationDate
+                };
+
+                _context.ProgramVerifications.Add(newVerification);
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramVerification pre DetailId: {detailId}, UserId: {verifierUserId}");
+            }
+        }
+
+        private async Task SaveProgramRelease(int detailId, string releasedBy, bool isReleased, Guid? releasedByUserId)
+        {
+            var release = await _context.ProgramReleases.FirstOrDefaultAsync(r => r.DetailId == detailId);
+
+            if (release != null)
+            {
+                release.ReleasedBy = releasedBy;
+                release.IsReleased = isReleased;
+                release.ReleasedByUserId = releasedByUserId; // Guid?
+                if (isReleased)
+                {
+                    release.ReleasedDate = DateTime.Now;
+                }
+
+                _context.Entry(release).State = EntityState.Modified;
+                System.Diagnostics.Debug.WriteLine($"✏️ Aktualizace ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}");
+            }
+            else if (!string.IsNullOrEmpty(releasedBy) || releasedByUserId.HasValue || isReleased)
+            {
+                var newRelease = new ProgramRelease
+                {
+                    DetailId = detailId,
+                    ReleasedBy = releasedBy,
+                    IsReleased = isReleased,
+                    ReleasedByUserId = releasedByUserId, // Guid?
+                    ReleasedDate = isReleased ? DateTime.Now : (DateTime?)null
+                };
+
+                _context.ProgramReleases.Add(newRelease);
+                System.Diagnostics.Debug.WriteLine($"🆕 Vytvoření nového ProgramRelease pre DetailId: {detailId}, UserId: {releasedByUserId}");
+            }
+        }
+
+        
 
 
         [HttpGet]
@@ -598,35 +830,102 @@ namespace vuez.Controllers
                     return NotFound();
                 }
 
-                // Najprv odstránime všetky detaily programových položiek (ak existujú)
-                var detailIds = await _context.ProgramItemDetails
-                    .Where(d => config.ProgramItems.Select(p => p.ItemId).Contains(d.ItemId))
-                    .Select(d => d.DetailId)
-                    .ToListAsync();
-
-                if (detailIds.Any())
+                // Začíname transakciu pre bezpečné mazanie
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    var details = await _context.ProgramItemDetails
-                        .Where(d => detailIds.Contains(d.DetailId))
-                        .ToListAsync();
+                    try
+                    {
+                        // KROK 1: Získame všetky DetailId ktoré budeme mazať
+                        var detailIds = await _context.ProgramItemDetails
+                            .Where(d => config.ProgramItems.Select(p => p.ItemId).Contains(d.ItemId))
+                            .Select(d => d.DetailId)
+                            .ToListAsync();
 
-                    _context.ProgramItemDetails.RemoveRange(details);
-                    await _context.SaveChangesAsync();
+                        System.Diagnostics.Debug.WriteLine($"🗑️ Našiel som {detailIds.Count} detailov na vymazanie");
+
+                        if (detailIds.Any())
+                        {
+                            // KROK 2: Odstrániť ProgramReviews (najskôr závislé tabuľky)
+                            var reviews = await _context.ProgramReviews
+                                .Where(r => detailIds.Contains(r.DetailId))
+                                .ToListAsync();
+
+                            if (reviews.Any())
+                            {
+                                _context.ProgramReviews.RemoveRange(reviews);
+                                System.Diagnostics.Debug.WriteLine($"🗑️ Odstraňujem {reviews.Count} ProgramReviews");
+                            }
+
+                            // KROK 3: Odstrániť ProgramVerifications
+                            var verifications = await _context.ProgramVerifications
+                                .Where(v => detailIds.Contains(v.DetailId))
+                                .ToListAsync();
+
+                            if (verifications.Any())
+                            {
+                                _context.ProgramVerifications.RemoveRange(verifications);
+                                System.Diagnostics.Debug.WriteLine($"🗑️ Odstraňujem {verifications.Count} ProgramVerifications");
+                            }
+
+                            // KROK 4: Odstrániť ProgramReleases
+                            var releases = await _context.ProgramReleases
+                                .Where(r => detailIds.Contains(r.DetailId))
+                                .ToListAsync();
+
+                            if (releases.Any())
+                            {
+                                _context.ProgramReleases.RemoveRange(releases);
+                                System.Diagnostics.Debug.WriteLine($"🗑️ Odstraňujem {releases.Count} ProgramReleases");
+                            }
+
+                            // KROK 5: Uložiť zmeny pre závislé tabuľky
+                            await _context.SaveChangesAsync();
+
+                            // KROK 6: Teraz môžeme bezpečne odstrániť ProgramItemDetails
+                            var details = await _context.ProgramItemDetails
+                                .Where(d => detailIds.Contains(d.DetailId))
+                                .ToListAsync();
+
+                            if (details.Any())
+                            {
+                                _context.ProgramItemDetails.RemoveRange(details);
+                                System.Diagnostics.Debug.WriteLine($"🗑️ Odstraňujem {details.Count} ProgramItemDetails");
+                                await _context.SaveChangesAsync();
+                            }
+                        }
+
+                        // KROK 7: Odstrániť ProgramItems
+                        if (config.ProgramItems.Any())
+                        {
+                            _context.ProgramItems.RemoveRange(config.ProgramItems);
+                            System.Diagnostics.Debug.WriteLine($"🗑️ Odstraňujem {config.ProgramItems.Count} ProgramItems");
+                            await _context.SaveChangesAsync();
+                        }
+
+                        // KROK 8: Nakoniec odstrániť ConfigurationSheet
+                        _context.ConfigurationSheets.Remove(config);
+                        await _context.SaveChangesAsync();
+
+                        // Potvrdenie transakcie
+                        await transaction.CommitAsync();
+
+                        System.Diagnostics.Debug.WriteLine("✅ Konfiguračný list úspešne vymazaný");
+                        TempData["SuccessMessage"] = "Konfiguračný list bol úspešne vymazaný.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (Exception)
+                    {
+                        // Rollback pri chybe
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
                 }
-
-                // Potom odstránime všetky programové položky
-                _context.ProgramItems.RemoveRange(config.ProgramItems);
-
-                // Nakoniec odstránime samotný konfiguračný list
-                _context.ConfigurationSheets.Remove(config);
-
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = "Konfiguračný list bol úspešne vymazaný.";
-                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"❌ CHYBA pri mazaní: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
+
                 TempData["ErrorMessage"] = $"Nastala chyba pri vymazávaní: {ex.Message}";
                 return RedirectToAction(nameof(Index));
             }
