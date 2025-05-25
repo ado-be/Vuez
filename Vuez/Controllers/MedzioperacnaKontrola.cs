@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using vuez.Models;
 using vuez.Models.ViewModels;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace vuez.Controllers
 {
@@ -65,28 +66,55 @@ namespace vuez.Controllers
             }
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
             try
             {
-                // Načítame všetky konfiguračné listy z databázy
-                var configurationSheets = await _context.ConfigurationSheets
+                var configurationSheets = from c in _context.ConfigurationSheets
+                                          select c;
+
+                if (!string.IsNullOrEmpty(searchString))
+                {
+                    configurationSheets = configurationSheets.Where(c =>
+                        c.Apvname.Contains(searchString) ||
+                        c.Apvnumber.Contains(searchString) ||
+                        c.OrderNumber.Contains(searchString) ||
+                        c.Processor.Contains(searchString));
+                }
+
+                var resultList = await configurationSheets
                     .OrderByDescending(c => c.CreatedDate)
                     .ToListAsync();
 
-                // Vypíšeme počet nájdených záznamov pre diagnostiku
-                System.Diagnostics.Debug.WriteLine($"Nájdených {configurationSheets.Count} konfiguračných listov");
+                // Skontrolujeme, či je aspoň jeden protokol starší ako 30 dní
+                var now = DateTime.Now;
+                bool hasOverdue = resultList.Any(c => c.CreatedDate.HasValue && (now - c.CreatedDate.Value).TotalDays > 30);
 
-                // Vrátime view s dátami
-                return View(configurationSheets);
+               
+           
+                if (hasOverdue )
+                {
+                    string message = "<strong>Upozornenie:</strong> ";
+                    if (hasOverdue) message += "Aspoň jedna medzioperačná kontrola je staršia ako 30 dní. ";
+                   
+                    TempData["OverdueWarning"] = message;
+
+                }
+
+                ViewData["CurrentFilter"] = searchString;
+
+              
+
+                return View(resultList);
             }
             catch (Exception ex)
             {
-                // Ak nastane chyba, zalogujeme ju a vrátime prázdny zoznam
                 System.Diagnostics.Debug.WriteLine($"Chyba pri načítaní konfiguračných listov: {ex.Message}");
                 return View(new List<ConfigurationSheet>());
             }
         }
+
+
 
         public IActionResult Create() => View(new ConfigurationSheetViewModel());
 

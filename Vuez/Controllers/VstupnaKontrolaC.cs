@@ -59,11 +59,39 @@ namespace vuez.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            var data = await _context.VstupnaKontrola.ToListAsync();
+            var vstupneKontroly = from v in _context.VstupnaKontrola
+                                  select v;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                vstupneKontroly = vstupneKontroly.Where(v =>
+                    v.NazovVyrobku.Contains(searchString) ||
+                    v.Dodavatel.Contains(searchString) ||
+                    v.ZakazkoveCislo.Contains(searchString));
+            }
+
+            var data = await vstupneKontroly.ToListAsync();
+
+            var now = DateTime.Now;
+            bool hasOverdue = data.Any(c => c.Datum.HasValue && (now - c.Datum.Value).TotalDays > 30);
+            bool hasUnsigned = data.Any(c => string.IsNullOrEmpty(c.PodpisManagerUrl) || string.IsNullOrEmpty(c.PodpisTechnikUrl));
+            if (hasOverdue || hasUnsigned)
+            {
+                string message = "<strong>Upozornenie:</strong> ";
+                if (hasOverdue) message += "Aspoň jedna vstupná kontrola je staršia ako 30 dní. ";
+                if (hasUnsigned) message += "Aspoň jedna vstupná kontrola nemá potrebné podpisy.";
+                TempData["OverdueWarning"] = message;
+
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
             return View(data);
         }
+
+
 
         public async Task<IActionResult> Detail(int? id)
         {

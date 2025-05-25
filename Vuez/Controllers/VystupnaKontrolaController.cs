@@ -13,11 +13,45 @@ namespace vuez.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString)
         {
-            var data = await _context.VystupnaKontrola.ToListAsync();
+            var vystupneKontroly = from v in _context.VystupnaKontrola
+                                   select v;
+
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                vystupneKontroly = vystupneKontroly.Where(v =>
+                    v.NazovVyrobku.Contains(searchString) ||
+                    v.Objednavatel.Contains(searchString) ||
+                    v.ZakazkoveCislo.Contains(searchString));
+            }
+
+            var data = await vystupneKontroly.ToListAsync();
+
+            var now = DateTime.Now;
+
+            // Kontrola na staršie ako 30 dní
+            bool hasOverdue = data.Any(c => c.Datum.HasValue && (now - c.Datum.Value).TotalDays > 30);
+
+            // Kontrola na chýbajúce podpisy manažéra alebo technika
+            bool hasUnsigned = data.Any(c => string.IsNullOrEmpty(c.PodpisManagerUrl) || string.IsNullOrEmpty(c.PodpisTechnikUrl));
+
+            if (hasOverdue || hasUnsigned)
+            {
+                string message = "<strong>Upozornenie:</strong> ";
+                if (hasOverdue) message += "Aspoň jedna výstupná kontrola je staršia ako 30 dní. ";
+                if (hasUnsigned) message += "Aspoň jedna výstupná kontrola nemá potrebné podpisy.";
+                TempData["OverdueWarning"] = message;
+
+            }
+
+            ViewData["CurrentFilter"] = searchString;
+
             return View(data);
         }
+
+
+
 
         public async Task<IActionResult> Create()
         {

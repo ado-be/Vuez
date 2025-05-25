@@ -1,55 +1,483 @@
 ﻿@model IEnumerable<vuez.Models.VstupnaKontrola>
 
-<h2>Zoznam vstupných kontrol</h2>
+<div class="container-fluid py-4">
+    <!-- Moderný header s gradientom -->
+    <div class="d-flex align-items-center mb-4">
+        <div class="icon-container me-3">
+            <i class="fas fa-clipboard-list text-success" style="font-size: 2rem;"></i>
+        </div>
+        <div>
+            <h2 class="mb-0 text-dark fw-bold">Zoznam vstupných kontrol</h2>
+            <p class="text-muted mb-0">Správa a monitoring vstupných kontrolných procesov</p>
+        </div>
+    </div>
 
-<a asp-action="Create" class="btn btn-success">+ Nová kontrola</a>
+    <!-- Upozornenie s moderným štýlom -->
+    @if (TempData["OverdueWarning"] != null)
+    {
+        <div class="alert alert-warning shadow-sm rounded-3 mb-4" role="alert" style="background-color: red;">
 
-<table class="table table-bordered mt-3">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Názov výrobku</th>
-            <th>Dodávateľ</th>
-            <th>Zákazkové číslo</th>
-            <th>Akcie</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            var chybaManager = string.IsNullOrEmpty(item.PodpisManagerUrl);
-            var chybaTechnik = string.IsNullOrEmpty(item.PodpisTechnikUrl);
-            var tooltipText = "";
-            if (chybaManager && chybaTechnik)
-            {
-                tooltipText = "Chýba podpis manažéra a technika";
-            }
-            else if (chybaManager)
-            {
-                tooltipText = "Chýba podpis manažéra";
-            }
-            else if (chybaTechnik)
-            {
-                tooltipText = "Chýba podpis technika";
-            }
 
-            <tr>
-                <td>
-                    @item.Id
-                    @if (chybaManager || chybaTechnik)
+            <div class="d-flex align-items-center">
+                <div class="alert-icon me-3">
+                    <i class="fas fa-exclamation-triangle text-warning" style="font-size: 1.5rem;"></i>
+                </div>
+                <div class="flex-grow-1">
+                    @Html.Raw(TempData["OverdueWarning"])
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    }
+
+    <!-- Moderný vyhľadávací panel -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body">
+            <form asp-action="Index" method="get" class="row g-3 align-items-end">
+                <div class="col-md-8">
+                    <label class="form-label text-muted small fw-semibold">VYHĽADÁVANIE</label>
+                    <div class="input-group">
+                        <span class="input-group-text border-0">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text"
+                               name="searchString"
+                               class="form-control border-0"
+                               placeholder="Vyhľadať podľa výrobku, dodávateľa alebo čísla"
+                               value="@ViewData["CurrentFilter"]" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-search me-2"></i>Hľadať
+                        </button>
+                        <a asp-action="Index" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Zrušiť
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tlačidlo pre novú kontrolu -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <span class="badge bg-light text-dark me-2">@Model.Count() záznamov</span>
+            <div class="status-indicators">
+                @{
+                    var overdueCount = Model.Count(m => m.Datum.HasValue && (DateTime.Now - m.Datum.Value).TotalDays > 30);
+                    var missingSignaturesCount = Model.Count(m => string.IsNullOrEmpty(m.PodpisManagerUrl) || string.IsNullOrEmpty(m.PodpisTechnikUrl));
+                }
+                @if (overdueCount > 0)
+                {
+                    <span class="badge bg-danger me-1" title="Počet starých záznamov" data-bs-toggle="tooltip">
+                        <i class="fas fa-clock me-1"></i>@overdueCount
+                    </span>
+                }
+                @if (missingSignaturesCount > 0)
+                {
+                    <span class="badge bg-warning text-dark" title="Počet záznamov s chýbajúcimi podpismi" data-bs-toggle="tooltip">
+                        <i class="fas fa-exclamation-triangle me-1"></i>@missingSignaturesCount
+                    </span>
+                }
+            </div>
+        </div>
+        <a asp-action="Create" class="btn btn-success px-4 shadow-sm">
+            <i class="fas fa-plus me-2"></i>Nová kontrola
+        </a>
+    </div>
+
+    <!-- Responzívna tabuľka s moderným dizajnom -->
+    <div class="card border-0 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="fw-semibold">
+                            <i class="fas fa-hashtag me-2"></i><strong>ID </strong>
+                        </th>
+                        <th class="fw-semibold">
+                            <i class="fas fa-box me-2"></i> <strong>Názov výrobku </strong>
+                        </th>
+                        <th class="fw-semibold">
+                            <i class="fas fa-truck me-2"></i><strong>Dodávateľ</strong>
+                        </th>
+                        <th class="fw-semibold">
+                            <i class="fas fa-file-alt me-2"></i><strong>Zákazkové číslo</strong>
+                        </th>
+                        <th class="fw-semibold">
+                            <i class="fas fa-calendar me-2"></i><strong>Dátum vytvorenia</strong>
+                        </th>
+                        <th class="fw-semibold text-center">
+                            <i class="fas fa-cogs me-2"></i><strong>Akcie</strong>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
                     {
-                        <span title="@tooltipText" style="color: red; font-weight: bold; margin-left: 5px;">&#9888;</span> <!-- výkričník -->
+                        var isOverdue = item.Datum.HasValue && (DateTime.Now - item.Datum.Value).TotalDays > 30;
+                        var chybaManager = string.IsNullOrEmpty(item.PodpisManagerUrl);
+                        var chybaTechnik = string.IsNullOrEmpty(item.PodpisTechnikUrl);
+                        var tooltipText = "";
+                        if (chybaManager && chybaTechnik)
+                        {
+                            tooltipText = "Chýba podpis manažéra a technika";
+                        }
+                        else if (chybaManager)
+                        {
+                            tooltipText = "Chýba podpis manažéra";
+                        }
+                        else if (chybaTechnik)
+                        {
+                            tooltipText = "Chýba podpis technika";
+                        }
+                   
+                        
+                        <tr class="@(isOverdue ? "table-warning" : "")">
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <span class="fw-bold text-success">#@item.Id</span>
+                                    @if (chybaManager || chybaTechnik)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-2" 
+                                              title="@tooltipText" 
+                                              data-bs-toggle="tooltip">
+                                            <i class="fas fa-exclamation-triangle"></i>
+                                        </span>
+                                    }
+                                    @if (isOverdue)
+                                    {
+                                        <span class="badge bg-danger ms-2" 
+                                              title="Staršie ako 30 dní" 
+                                              data-bs-toggle="tooltip">
+                                            <i class="fas fa-clock"></i>
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <div class="fw-semibold text-dark">@item.NazovVyrobku</div>
+                            </td>
+                            <td class="align-middle">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-building text-muted me-2"></i>
+                                    <span class="text-muted">@item.Dodavatel</span>
+                                </div>
+                            </td>
+                            <td class="align-middle">
+                                <code class="bg-light px-2 py-1 rounded">@item.ZakazkoveCislo</code>
+                            </td>
+                            <td class="align-middle">
+                                @if (item.Datum.HasValue)
+                                {
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-calendar-alt text-muted me-2"></i>
+                                        <span>@item.Datum.Value.ToString("dd.MM.yyyy")</span>
+                                        @if (isOverdue)
+                                        {
+                                            <small class="text-danger ms-2 fw-bold">
+                                                (@((int)(DateTime.Now - item.Datum.Value).TotalDays) dní)
+                                            </small>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">Nezadané</span>
+                                }
+                            </td>
+                            <td class="align-middle text-center">
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Edit" 
+                                       asp-route-id="@item.Id" 
+                                       class="btn btn-outline-primary btn-sm" 
+                                       title="Upraviť"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a asp-action="Delete" 
+                                       asp-route-id="@item.Id" 
+                                       class="btn btn-outline-danger btn-sm" 
+                                       title="Vymazať"
+                                       data-bs-toggle="tooltip"
+                                       onclick="return confirm('Ste si istí, že chcete vymazať túto vstupnú kontrolu?')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    <a asp-action="Detail" 
+                                       asp-route-id="@item.Id" 
+                                       class="btn btn-outline-info btn-sm" 
+                                       title="Detail"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
                     }
-                </td>
-                <td>@item.NazovVyrobku</td>
-                <td>@item.Dodavatel</td>
-                <td>@item.ZakazkoveCislo</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-action btn-edit">Upraviť</a>
-                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-action btn-delete">Vymazať</a>
-                    <a asp-action="Detail" asp-route-id="@item.Id" class="btn btn-info btn-action btn-detail">Detail</a>
-                </td>
-            </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-clipboard-list text-muted" style="font-size: 4rem; opacity: 0.3;"></i>
+            </div>
+            <h5 class="text-muted">Žiadne vstupné kontroly sa nenašli</h5>
+            <p class="text-muted">Skúste zmeniť vyhľadávacie kritériá alebo vytvorte novú vstupnú kontrolu.</p>
+            <a asp-action="Create" class="btn btn-success">
+                <i class="fas fa-plus me-2"></i>Vytvoriť prvú vstupnú kontrolu
+            </a>
+        </div>
+    }
+</div>
+
+<style>
+/* Moderné štýly pre vstupné kontroly */
+.card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        background: #D2691E !important;
+        color: black !important;
+    }
+
+
+.table td {
+    
+    padding: 1rem;
+    vertical-align: middle;
+       
+}
+
+    .table th, .table td {
+        border: 1px solid #585858 /* jemné šedé orámovanie */
+    }
+
+
+.table-hover tbody tr:hover {
+    background-color: rgba(40,167,69,0.05);
+    transform: scale(1.01);
+    transition: all 0.2s ease;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #218838, #1abc9c);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(40,167,69,0.3);
+}
+
+.btn-group .btn {
+    border-radius: 6px;
+    margin: 0 2px;
+}
+
+    .input-group-text {
+        background-color: #FFA500 !important;
+        border-color: #FF8C00 !important;
+        color: black !important;
+        border-radius: 8px 0 0 8px !important; /* pridaj toto */
+    }
+
+    .form-control {
+        border-color: #FF8C00 !important;
+        background-color: #FFF8DC !important;
+        color: black !important;
+        border-radius: 0 8px 8px 0 !important; /* pridaj toto */
+    }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 0.2rem rgba(255, 165, 0, 0.25) !important;
+            border-color: #FF6600 !important;
+            color: black !important;
+            background-color: #FFF8DC !important; /* pridaj aj toto */
         }
-    </tbody>
-</table>
+
+
+        .form-control::placeholder {
+            color: #8B4513 !important; /* hnedá farba */
+            opacity: 1 !important;
+        }
+
+        .form-control::-webkit-input-placeholder {
+            color: #8B4513 !important; /* pre Chrome/Safari */
+        }
+
+        .form-control::-moz-placeholder {
+            color: #8B4513 !important; /* pre Firefox */
+            opacity: 1 !important;
+        }
+
+        .form-control:-ms-input-placeholder {
+            color: #8B4513 !important; /* pre IE */
+        }
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+    border-radius: 6px;
+}
+
+.table-warning {
+        background-color: #ffe066 !important; /* sýta žltá */
+    border-left: 4px solid #ffc107;
+}
+
+.alert {
+    border-radius: 12px;
+}
+
+    body div.alert.alert-warning {
+        background-color: #ff6666 !important; /* sýta žltá */
+            color: #212529 !important; /* tmavý text */
+            border: 1px solid #ffc107 !important; /* viditeľný okraj */
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+            font-weight: 600;
+        }
+
+
+
+.icon-container {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(32,201,151,0.05));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.status-indicators .badge {
+    animation: pulse 2s infinite;
+}
+
+@@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Vstupné kontroly - zelené akcenty */
+.text-success {
+    color: #28a745 !important;
+}
+
+.btn-outline-primary:hover {
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.btn-outline-danger:hover {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-info:hover {
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+/* Responzívne vylepšenia */
+@@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+    }
+    
+    .btn-group .btn {
+        margin: 2px 0;
+        font-size: 0.8rem;
+    }
+    
+    .table td, .table th {
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .status-indicators {
+        margin-top: 0.5rem;
+    }
+}
+
+/* Animácie */
+@@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card, .alert {
+    animation: fadeIn 0.5s ease forwards;
+}
+
+/* Hover efekt pre riadky s problémami */
+.table-warning:hover {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    border-left-width: 6px;
+    transition: all 0.3s ease;
+}
+
+/* Špeciálne štýly pre vstupné kontroly */
+.table-dark {
+    background: linear-gradient(135deg, #28a745, #20c997) !important;
+}
+
+code {
+    font-size: 0.9em;
+    font-weight: 600;
+}
+</style>
+
+<script>
+// Inicializácia tooltipov
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+    
+    // Animácia pre nové riadky
+    setTimeout(function() {
+        document.querySelectorAll('tbody tr').forEach(function(row, index) {
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(20px)';
+            
+            setTimeout(function() {
+                row.style.transition = 'all 0.5s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateY(0)';
+            }, index * 100);
+        });
+    }, 100);
+});
+</script>
