@@ -79,9 +79,12 @@
                
             </div>
         </div>
-        <a asp-action="Create" class="btn btn-success px-4 shadow-sm">
-            <i class="fas fa-plus me-2"></i>Nová kontrola
+        @if (User.IsInRole("Technician"))
+        {
+            <a asp-action="Create" class="btn btn-success px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i>Nová kontrola
         </a>
+        }
     </div>
 
     <!-- Responzívna tabuľka s moderným dizajnom -->
@@ -176,18 +179,37 @@
                             </td>
                             <td class="align-middle text-center">
                                 <div class="btn-group" role="group">
-                                    <a asp-action="Edit" asp-route-configId="@item.ConfigId" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-edit"></i> Upraviť
-                                    </a>
+                                    @if (User.IsInRole("Technician") || User.IsInRole("Manager"))
+                                    {
+                                        <a asp-action="Edit" asp-route-configId="@item.ConfigId" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Upraviť
+                                        </a>
 
-                                    <a asp-action="Delete"
+                                        <a asp-action="Delete"
+                                        asp-route-configId="@item.ConfigId"
+                                        class="btn btn-outline-danger btn-sm" 
+                                        title="Vymazať"
+                                        data-bs-toggle="tooltip"
+                                        onclick="return confirm('Ste si istí, že chcete vymazať túto medzioperačnú kontrolu?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+
+                                          <a asp-action="Configlist"
+                                       asp-controller="MedzioperacnaKontrola"
                                        asp-route-configId="@item.ConfigId"
-                                       class="btn btn-outline-danger btn-sm" 
-                                       title="Vymazať"
-                                       data-bs-toggle="tooltip"
-                                       onclick="return confirm('Ste si istí, že chcete vymazať túto medzioperačnú kontrolu?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                       class="btn btn-outline-info btn-sm"
+                                       title="Konfigurácia"
+                                       data-bs-toggle="tooltip">
+                                        <i class="fas fa-cog text-primary me-1"></i> Konfigurácia
+                                        </a>  <a asp-action="Configlist"
+                                                 asp-controller="MedzioperacnaKontrola"
+                                                 asp-route-configId="@item.ConfigId"
+                                                 class="btn btn-outline-info btn-sm"
+                                                 title="Konfigurácia"
+                                                 data-bs-toggle="tooltip">
+                                            <i class="fas fa-cog text-primary me-1"></i> Konfigurácia
+                                        </a>
+                                    }
                                     <a asp-action="Detail"
                                        asp-route-configId="@item.ConfigId"
                                        class="btn btn-outline-info btn-sm" 
@@ -196,14 +218,7 @@
                                         <i class="fas fa-eye"></i>
                                     </a>
 
-                                    <a asp-action="Configlist"
-                                       asp-controller="MedzioperacnaKontrola"
-                                       asp-route-configId="@item.ConfigId"
-                                       class="btn btn-outline-info btn-sm"
-                                       title="Konfigurácia"
-                                       data-bs-toggle="tooltip">
-                                        <i class="fas fa-cog text-primary me-1"></i> Konfigurácia
-                                    </a>
+                                  
 
 
 

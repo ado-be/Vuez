@@ -84,9 +84,12 @@
                 }
             </div>
         </div>
-        <a asp-action="Create" class="btn btn-success px-4 shadow-sm">
-            <i class="fas fa-plus me-2"></i>Nová kontrola
+        @if (User.IsInRole("Technician"))
+        {
+            <a asp-action="Create" class="btn btn-success px-4 shadow-sm">
+                <i class="fas fa-plus me-2"></i>Nová kontrola
         </a>
+        }
     </div>
 
     <!-- Responzívna tabuľka s moderným dizajnom -->
@@ -191,21 +194,24 @@
                             </td>
                             <td class="align-middle text-center">
                                 <div class="btn-group" role="group">
-                                    <a asp-action="Edit" 
-                                       asp-route-id="@item.Id" 
-                                       class="btn btn-outline-primary btn-sm" 
-                                       title="Upraviť"
-                                       data-bs-toggle="tooltip">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <a asp-action="Delete" 
-                                       asp-route-id="@item.Id" 
-                                       class="btn btn-outline-danger btn-sm" 
-                                       title="Vymazať"
-                                       data-bs-toggle="tooltip"
-                                       onclick="return confirm('Ste si istí, že chcete vymazať túto vstupnú kontrolu?')">
-                                        <i class="fas fa-trash"></i>
-                                    </a>
+                                    @if (User.IsInRole("Technician") || User.IsInRole("Manager"))
+                                    {
+                                        <a asp-action="Edit" 
+                                        asp-route-id="@item.Id" 
+                                        class="btn btn-outline-primary btn-sm" 
+                                        title="Upraviť"
+                                        data-bs-toggle="tooltip">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a asp-action="Delete" 
+                                        asp-route-id="@item.Id" 
+                                        class="btn btn-outline-danger btn-sm" 
+                                        title="Vymazať"
+                                        data-bs-toggle="tooltip"
+                                        onclick="return confirm('Ste si istí, že chcete vymazať túto vstupnú kontrolu?')">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    }
                                     <a asp-action="Detail" 
                                        asp-route-id="@item.Id" 
                                        class="btn btn-outline-info btn-sm" 
@@ -230,9 +236,12 @@
             </div>
             <h5 class="text-muted">Žiadne vstupné kontroly sa nenašli</h5>
             <p class="text-muted">Skúste zmeniť vyhľadávacie kritériá alebo vytvorte novú vstupnú kontrolu.</p>
-            <a asp-action="Create" class="btn btn-success">
-                <i class="fas fa-plus me-2"></i>Vytvoriť prvú vstupnú kontrolu
+            @if (User.IsInRole("Technician"))
+            {
+                <a asp-action="Create" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>Vytvoriť prvú vstupnú kontrolu
             </a>
+            }
         </div>
     }
 </div>
