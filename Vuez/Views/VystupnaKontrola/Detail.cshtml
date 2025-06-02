@@ -71,7 +71,10 @@
         </div>
 
         <div class="submit-container mt-4">
-            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Upraviť</a>
+            @if (User.IsInRole("Technician"))
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Upraviť</a>
+            }
             <a asp-action="Index" class="btn btn-secondary">Späť na zoznam</a>
         </div>
     </form>

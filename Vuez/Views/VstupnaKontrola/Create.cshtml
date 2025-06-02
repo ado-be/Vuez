@@ -26,15 +26,28 @@
         <table class="form-table">
             <tr>
                 <td><label asp-for="NazovVyrobku">Názov a typ výrobku:</label></td>
-                <td><input asp-for="NazovVyrobku" class="form-control" required /></td>
+                <td>
+                    <input asp-for="NazovVyrobku" class="form-control" required />
+                    <span asp-validation-for="NazovVyrobku" class="text-danger"></span>
+                    
+                </td>
+               
             </tr>
             <tr>
                 <td><label asp-for="Dodavatel">Dodávateľ:</label></td>
-                <td><input asp-for="Dodavatel" class="form-control" required /></td>
+                <td>
+                    <input asp-for="Dodavatel" class="form-control" required />
+                    <span asp-validation-for="Dodavatel" class="text-danger"></span>
+                    
+                </td>
             </tr>
             <tr>
                 <td><label asp-for="ZakazkoveCislo">Zákazkové číslo:</label></td>
-                <td><input asp-for="ZakazkoveCislo" class="form-control" required /></td>
+                <td>
+                    <input asp-for="ZakazkoveCislo" class="form-control" required />
+                    <span asp-validation-for="ZakazkoveCislo" class="text-danger"></span>
+                    
+                </td>
             </tr>
             <tr>
                 <td><label asp-for="KontrolaPodla">Kontrola vykonaná podľa:</label></td>
@@ -76,28 +89,42 @@
                 <td><label asp-for="Datum">Dátum:</label></td>
                 <td colspan="3"><input asp-for="Datum" class="form-control" /></td>
             </tr>
+            </table>
 
-            <tr>
-                <td colspan="2">
-                    <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px;">
-                        <div style="flex: 1 1 200px; text-align: center;">
-                            <div id="podpisPM" style="height: 100px;"></div>
-                            <div class="text-center">podpis projekt - manažéra</div>
-                        </div>
-                        <div style="flex: 1 1 200px; text-align: center;">
-                            <div id="podpisTK" style="height: 100px;"></div>
-                            <div class="text-center">pečiatka a podpis pracovníka TK</div>
-                        </div>
-                    </div>
-                </td>
-            </tr>
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-around; gap: 20px; margin-top: 20px;">
 
-        </table>
+            <div style="flex: 1 1 200px; text-align: center;">
+                @if (!string.IsNullOrEmpty(Model.PodpisManagerUrl))
+                {
+                    <div style="color: green; font-weight: bold;">Podpísané</div>
+                }
+                else
+                {
+                    <div>Čaká na podpis</div>
+                }
+                <div id="podpisPM" style="height: 100px;"></div>
+                <div>podpis projekt - manažéra</div>
+            </div>
+            <div style="flex: 1 1 200px; text-align: center;">
+                @if (!string.IsNullOrEmpty(Model.PodpisTechnikUrl))
+                {
+                    <div style="color: green; font-weight: bold;">Podpísané</div>
+                }
+                else
+                {
+                    <div>Čaká na podpis</div>
+                }
+                <div id="podpisTK" style="height: 100px;"></div>
+                <div> podpis pracovníka TK</div>
+            </div>
+        </div>
 
-        <!-- Skryté inputy pre podpisy -->
+        <!-- Skryté inputy -->
+
         <input type="hidden" asp-for="PodpisManagerUrl" id="PodpisManagerUrl" />
         <input type="hidden" asp-for="PodpisTechnikUrl" id="PodpisTechnikUrl" />
         <input type="hidden" id="podpisUrl" value="@ViewBag.PodpisUrl" />
+
 
         @* Manažér *@
         @if (User.IsInRole("Manager"))
@@ -133,3 +160,9 @@
         }
     </script>
 
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+    }

@@ -107,14 +107,22 @@ namespace vuez.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
+
             if (id == null || id == 0)
                 return NotFound();
 
-            var kontrola = await _context.VstupnaKontrola.FindAsync(id);
-            if (kontrola == null)
+            var vstupnaKontrolaFromDb = await _context.VstupnaKontrola.FindAsync(id);
+            if (vstupnaKontrolaFromDb == null)
                 return NotFound();
 
-            return View(kontrola);
+            // 👉 Aj v edit načítať podpis, ak potrebné
+            var user = await _context.Users
+                                     .Include(u => u.Details)
+                                     .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+            ViewBag.PodpisUrl = user?.Details?.SignatureImagePath;
+
+            return View(vstupnaKontrolaFromDb);
+
         }
 
         [HttpPost]
